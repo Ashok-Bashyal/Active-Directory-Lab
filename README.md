@@ -1987,13 +1987,9 @@ The `Pwn3d!` indicator is NetExec's reported access status. It does not independ
 
 The screenshot below shows the controlled RDP password brute-force simulation performed against the Windows 10 target using NetExec.
 
-**Important:** Replace the original screenshot with a redacted copy before displaying it publicly because the original includes the working lab password.
-
-<!--
-After redacting the password in the GitHub image, remove these comment markers.
 
 ![NetExec RDP Password Brute-Force Attack](images/netexec%20password%20brute%20force%20attack.png)
--->
+
 
 ### Security Significance
 
