@@ -1985,13 +1985,15 @@ The `Pwn3d!` indicator is NetExec's reported access status. It does not independ
 
 ### RDP Brute-Force Attack Evidence
 
-**Before displaying this screenshot publicly, the working lab password must be redacted from the image stored in GitHub.**
+The screenshot below shows the controlled RDP password brute-force attack performed against the Windows 10 target using NetExec.
 
-<!--
-Uncomment this image after replacing the original with a redacted copy.
+The tool attempted multiple passwords against the `tsmith` domain account. Most attempts returned `STATUS_LOGON_FAILURE`, indicating unsuccessful authentication.
+
+After several failed attempts, NetExec successfully authenticated using the valid test credential.
 
 ![NetExec RDP Password Brute-Force Attack](images/netexec%20password%20brute%20force%20attack.png)
--->
+
+**Result:** The simulation generated multiple failed authentication attempts followed by a successful credential validation, allowing the activity to be investigated in Splunk Enterprise.
 
 ### Security Significance
 
