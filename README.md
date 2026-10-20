@@ -119,7 +119,7 @@ VMware provides the virtual networking environment, while Splunk Enterprise acts
 
 ### Active Directory Configuration
 
-```text id="1n7934"
+```text id="v5mnqt"
 Domain Name        : adlab.local
 NetBIOS Domain     : ADLAB
 Domain Controller  : ADDC01
@@ -144,7 +144,7 @@ The resulting events are recorded by Windows and Sysmon, forwarded to Splunk, an
 
 ### Security Monitoring Workflow
 
-```text id="ukdqxp"
+```text id="s2g3xk"
                    KALI LINUX
                   192.168.10.250
                         |
@@ -261,7 +261,7 @@ I then selected the downloaded Windows 10 ISO file.
 
 The virtual machine was named:
 
-```text id="sq2j2a"
+```text id="039o05"
 Windows 10 AD-Lab
 ```
 
@@ -424,7 +424,7 @@ After installation, I restarted Ubuntu and signed in.
 
 Before installing Splunk, I updated Ubuntu's package information and installed available upgrades.
 
-```bash id="0vvv3h"
+```bash id="wsqs7f"
 sudo apt-get update && sudo apt-get upgrade -y
 ```
 
@@ -452,7 +452,7 @@ I selected `VMnet8` and configured it as a NAT network.
 
 ### VMware NAT Settings
 
-```text id="6yxfza"
+```text id="rmv4ow"
 Network Name   : VMnet8
 Network Type   : NAT
 Subnet IP      : 192.168.10.0
@@ -487,7 +487,7 @@ A static IP address is important because the Windows endpoints use Splunk Univer
 
 ### Network Configuration
 
-```text id="u69wlt"
+```text id="uc9bdu"
 IP Address      : 192.168.10.10
 Subnet Mask     : 255.255.255.0
 Default Gateway : 192.168.10.2
@@ -498,7 +498,7 @@ DNS Server      : 8.8.8.8
 
 On Ubuntu, I opened the Netplan configuration file:
 
-```bash id="eac6f3"
+```bash id="46iqy0"
 sudo nano /etc/netplan/00-installer-config.yaml
 ```
 
@@ -508,7 +508,7 @@ sudo nano /etc/netplan/00-installer-config.yaml
 
 The Netplan configuration used the following settings:
 
-```yaml id="had4kg"
+```yaml id="pflwhy"
 network:
   ethernets:
     ens33:
@@ -548,7 +548,7 @@ network:
 
 Before applying the static IP address, I checked the current network configuration:
 
-```bash id="cnv66i"
+```bash id="d2hy4d"
 ip a
 ```
 
@@ -558,7 +558,7 @@ ip a
 
 Initially, Ubuntu received its IP address dynamically.
 
-```text id="nx9m8m"
+```text id="a0u53i"
 Interface      : ens33
 IP Address     : 192.168.10.129/24
 Assignment     : DHCP
@@ -572,7 +572,7 @@ The screenshot shows the dynamically assigned address before the static network 
 
 After saving the Netplan file, I applied the configuration:
 
-```bash id="kv36fm"
+```bash id="vgrnjk"
 sudo netplan apply
 ```
 
@@ -582,13 +582,13 @@ sudo netplan apply
 
 After applying the settings, I ran:
 
-```bash id="w7fsjm"
+```bash id="yq6cjb"
 ip a
 ```
 
 #### After Static IP Configuration
 
-```text id="qnaeq3"
+```text id="ztmffy"
 Interface      : ens33
 IP Address     : 192.168.10.10/24
 Assignment     : Static
@@ -603,13 +603,13 @@ The screenshot confirms that Ubuntu was now using the planned static IP address.
 
 After configuring the static IP, I tested connectivity.
 
-```bash id="ezrtsw"
+```bash id="oqmp3m"
 ping google.com
 ```
 
 I also tested connectivity to Google's DNS resolver:
 
-```bash id="lbp8gr"
+```bash id="9306mt"
 ping 8.8.8.8
 ```
 
@@ -631,7 +631,7 @@ The server would later be configured as the Domain Controller and DNS Server for
 
 Before installing Active Directory, Windows Server was configured with:
 
-```text id="8x4qg0"
+```text id="z1mnub"
 IP Address          : 192.168.10.7
 Subnet Mask         : 255.255.255.0
 Default Gateway     : 192.168.10.2
@@ -654,7 +654,7 @@ At this stage, Active Directory Domain Services and the DNS Server role had not 
 
 I renamed the server to:
 
-```text id="0r7zgf"
+```text id="jenkzl"
 ADDC01
 ```
 
@@ -666,7 +666,7 @@ ADDC01
 
 I tested network connectivity using the Windows ping command.
 
-```powershell id="b2ukyy"
+```powershell id="l1rfq7"
 ping 192.168.10.10
 ```
 
@@ -678,19 +678,19 @@ This verifies ICMP communication between Windows Server and the Splunk Enterpris
 
 After installing Active Directory Domain Services and configuring DNS, the server's preferred DNS address was updated from:
 
-```text id="u6v52p"
+```text id="wo98eh"
 8.8.8.8
 ```
 
 To:
 
-```text id="j0avxa"
+```text id="6ifhsq"
 192.168.10.7
 ```
 
 ### Final Domain Controller Network Configuration
 
-```text id="kfz8ei"
+```text id="79v8sk"
 Computer Name       : ADDC01
 Domain              : adlab.local
 IP Address          : 192.168.10.7
@@ -717,7 +717,7 @@ The Windows 10 workstation was configured with a static IP address before joinin
 
 I renamed the computer to:
 
-```text id="8jjw7f"
+```text id="wob1dr"
 target-PC
 ```
 
@@ -737,7 +737,7 @@ The screenshot confirms that the workstation was renamed to `target-PC`.
 
 Before configuring Active Directory, the Windows 10 workstation used the following network settings:
 
-```text id="dbhejj"
+```text id="qags54"
 Computer Name       : target-PC
 IP Address          : 192.168.10.100
 Subnet Mask         : 255.255.255.0
@@ -767,13 +767,13 @@ After installing Active Directory and configuring DNS on Windows Server 2022, I 
 
 **Before Active Directory:**
 
-```text id="6qx14v"
+```text id="movj0j"
 Preferred DNS Server: 8.8.8.8
 ```
 
 **After Active Directory:**
 
-```text id="9scmge"
+```text id="27lu67"
 Preferred DNS Server: 192.168.10.7
 ```
 
@@ -781,7 +781,7 @@ Preferred DNS Server: 192.168.10.7
 
 ### Final Windows 10 Network Configuration
 
-```text id="ev4p3h"
+```text id="0ikvu6"
 Computer Name       : target-PC
 IP Address          : 192.168.10.100
 Subnet Mask         : 255.255.255.0
@@ -837,25 +837,25 @@ I selected the Linux `.deb` installation package.
 
 Before transferring the Splunk installer, I installed VMware Tools on Ubuntu.
 
-```bash id="he0n4f"
+```bash id="cdk6dl"
 sudo apt update
 ```
 
 Then:
 
-```bash id="nblpuk"
+```bash id="y873v6"
 sudo apt install open-vm-tools -y
 ```
 
 Enable the service:
 
-```bash id="6ogdcx"
+```bash id="jo4wz7"
 sudo systemctl enable --now open-vm-tools
 ```
 
 Verify:
 
-```bash id="93eh5o"
+```bash id="wvmpkr"
 systemctl status open-vm-tools
 ```
 
@@ -869,19 +869,19 @@ systemctl status open-vm-tools
 
 To transfer the Splunk installation package from Windows to Ubuntu, I installed OpenSSH Server.
 
-```bash id="eyspwa"
+```bash id="e2rjgy"
 sudo apt install openssh-server -y
 ```
 
 Enable SSH:
 
-```bash id="bzap0p"
+```bash id="70np7b"
 sudo systemctl enable --now ssh
 ```
 
 Verify:
 
-```bash id="isrp7g"
+```bash id="514ezv"
 sudo systemctl status ssh
 ```
 
@@ -891,7 +891,7 @@ sudo systemctl status ssh
 
 If UFW is active, SSH access can be permitted from the Windows VMware host.
 
-```bash id="w0dko9"
+```bash id="jhryxo"
 sudo ufw allow from 192.168.10.1 to any port 22 proto tcp
 ```
 
@@ -911,13 +911,13 @@ I used SCP to transfer the installation package to Ubuntu.
 
 On the Windows host, I navigated to the drive containing the installation file.
 
-```powershell id="93tyy4"
+```powershell id="olsvzl"
 cd F:\
 ```
 
 ### Step 2 — Transfer the Installer Using SCP
 
-```powershell id="bn6qwj"
+```powershell id="70wqha"
 scp .\splunk-10.6.1.1-b2ae2962645c-linux-amd64.deb rangeuser21@192.168.10.10:/home/rangeuser21/
 ```
 
@@ -939,7 +939,7 @@ scp .\splunk-10.6.1.1-b2ae2962645c-linux-amd64.deb rangeuser21@192.168.10.10:/ho
 
 After the transfer, I verified that the package existed on Ubuntu.
 
-```bash id="8p5mse"
+```bash id="bw4ry9"
 ls -lh ~/splunk*.deb
 ```
 
@@ -953,7 +953,7 @@ The installation file was successfully transferred and was ready for installatio
 
 After transferring the installation package, I installed Splunk Enterprise.
 
-```bash id="pjl9ko"
+```bash id="mbzzrc"
 sudo apt install ~/splunk-10.6.1.1-b2ae2962645c-linux-amd64.deb
 ```
 
@@ -972,13 +972,13 @@ sudo apt install ~/splunk-10.6.1.1-b2ae2962645c-linux-amd64.deb
 
 I navigated to the Splunk installation directory:
 
-```bash id="eo16gq"
+```bash id="yvw6ss"
 cd /opt/splunk
 ```
 
 I viewed the directory contents and permissions:
 
-```bash id="58jjpx"
+```bash id="q8xze7"
 ls -la
 ```
 
@@ -994,7 +994,7 @@ After installing Splunk Enterprise, I started the application using the `splunk`
 
 ### Step 1 — Switch to the Splunk User
 
-```bash id="4e0c47"
+```bash id="0w0btn"
 sudo -u splunk bash
 ```
 
@@ -1004,13 +1004,13 @@ sudo -u splunk bash
 
 From `/opt/splunk`:
 
-```bash id="10xxjo"
+```bash id="vsxgve"
 cd bin
 ```
 
 ### Step 3 — Start Splunk Enterprise
 
-```bash id="s3vuvq"
+```bash id="7a8o9s"
 ./splunk start
 ```
 
@@ -1020,19 +1020,19 @@ During the initial startup, I created the Splunk administrator username and pass
 
 After completing the initial startup, I exited the `splunk` user shell.
 
-```bash id="rjh23d"
+```bash id="27jxaa"
 exit
 ```
 
 I then navigated to the Splunk binary directory:
 
-```bash id="wbtj13"
+```bash id="8gmdg2"
 cd /opt/splunk/bin
 ```
 
 Next, I ran:
 
-```bash id="10wmoe"
+```bash id="xohl7r"
 sudo ./splunk enable boot-start -user splunk
 ```
 
@@ -1042,7 +1042,7 @@ sudo ./splunk enable boot-start -user splunk
 
 After running the command, Splunk displayed:
 
-```text id="6jrhi4"
+```text id="8fp4zk"
 Init script is configured to run at boot.
 ```
 
@@ -1058,7 +1058,7 @@ The screenshot confirms that Splunk was successfully configured to start automat
 
 After starting Splunk, I opened a web browser and navigated to:
 
-```text id="15uogd"
+```text id="3hwh65"
 http://192.168.10.10:8000
 ```
 
@@ -1088,7 +1088,7 @@ These components provide the endpoint monitoring infrastructure for the project.
 
 ### How the Components Work Together
 
-```text id="7z3oxq"
+```text id="nkre8r"
                   WINDOWS ENDPOINT
                         |
                         v
@@ -1133,7 +1133,7 @@ The Deployment Server field was left blank because I was not using a separate de
 
 ### Receiving Indexer Configuration
 
-```text id="qioytm"
+```text id="z5sg0u"
 Splunk Server IP: 192.168.10.10
 Receiving Port  : 9997
 ```
@@ -1203,13 +1203,13 @@ I opened Windows PowerShell as Administrator.
 
 I navigated to the folder containing Sysmon and the downloaded configuration file.
 
-```powershell id="fovkcf"
+```powershell id="d522ve"
 cd C:\Users\AD-Lab-Target\Downloads\Sysmon
 ```
 
 I then executed:
 
-```powershell id="utwyxq"
+```powershell id="8csh2k"
 .\Sysmon64.exe -i .\sysmonconfig.xml
 ```
 
@@ -1249,7 +1249,7 @@ After installing Sysmon, I configured Universal Forwarder to collect the require
 
 The configuration is stored in a file named:
 
-```text id="18dy0m"
+```text id="u20z28"
 inputs.conf
 ```
 
@@ -1261,7 +1261,7 @@ I opened Notepad with administrative privileges.
 
 The configuration file was saved under:
 
-```text id="9e2gi0"
+```text id="jtx2hx"
 C:\Program Files\SplunkUniversalForwarder\etc\system\local\inputs.conf
 ```
 
@@ -1269,7 +1269,7 @@ C:\Program Files\SplunkUniversalForwarder\etc\system\local\inputs.conf
 
 I added the following configuration:
 
-```ini id="zcxbqk"
+```ini id="n8sh4a"
 [WinEventLog://Application]
 index = endpoint
 disabled = 0
@@ -1309,7 +1309,7 @@ source = XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
 
 After saving the configuration, I restarted the Forwarder service.
 
-```powershell id="7c0on8"
+```powershell id="i7ov1l"
 Restart-Service SplunkForwarder
 ```
 
@@ -1317,7 +1317,7 @@ Restart-Service SplunkForwarder
 
 I verified that the service was running.
 
-```powershell id="0enauv"
+```powershell id="1ci6bm"
 Get-Service SplunkForwarder
 ```
 
@@ -1346,7 +1346,7 @@ In Splunk Enterprise, I navigated to:
 
 I entered:
 
-```text id="f9qlws"
+```text id="xcdh4l"
 endpoint
 ```
 
@@ -1368,7 +1368,7 @@ Navigate to:
 
 I added receiving port:
 
-```text id="sck2w3"
+```text id="5og80p"
 9997
 ```
 
@@ -1384,13 +1384,13 @@ After completing the configuration, I opened Splunk Search & Reporting.
 
 I searched the endpoint index:
 
-```spl id="qzf698"
+```spl id="5teqxw"
 index=endpoint
 ```
 
 I also used:
 
-```spl id="tdkmjt"
+```spl id="ndsqys"
 index=endpoint
 | stats count by host source
 ```
@@ -1401,7 +1401,7 @@ index=endpoint
 
 After configuring both Windows machines, Splunk displayed events from:
 
-```text id="kr4ll9"
+```text id="bwm6nn"
 target-PC
 ADDC01
 ```
@@ -1410,7 +1410,7 @@ ADDC01
 
 The collected data included:
 
-```text id="incu2r"
+```text id="kg3t9h"
 WinEventLog:Security
 WinEventLog:System
 WinEventLog:Application
@@ -1477,7 +1477,7 @@ Because this was a new Active Directory environment, I selected **Add a new fore
 
 The domain name was:
 
-```text id="mld7je"
+```text id="26jn9b"
 adlab.local
 ```
 
@@ -1499,7 +1499,7 @@ The installation wizard displayed the database and related directory paths.
 
 One important Active Directory database file is:
 
-```text id="rnbrlg"
+```text id="34fa6y"
 NTDS.dit
 ```
 
@@ -1529,7 +1529,7 @@ I then signed in using the domain Administrator account.
 
 ### Final Domain Configuration
 
-```text id="1l6gmg"
+```text id="xi9uxp"
 Domain Name       : adlab.local
 NetBIOS Name      : ADLAB
 Domain Controller : ADDC01
@@ -1564,7 +1564,7 @@ I reviewed the built-in Active Directory groups and their available properties.
 
 To simulate an organizational structure, I created departmental Organizational Units.
 
-```text id="ne221d"
+```text id="tz6psu"
 adlab.local
 |
 +--- IT
@@ -1645,7 +1645,7 @@ Under Computer Name, I selected Change.
 
 I selected Domain and entered:
 
-```text id="21i5dc"
+```text id="hgu6o6"
 adlab.local
 ```
 
@@ -1663,7 +1663,7 @@ However, Active Directory requires DNS records hosted by the Domain Controller.
 
 I updated the DNS server to:
 
-```text id="slbti5"
+```text id="7yn31e"
 192.168.10.7
 ```
 
@@ -1671,7 +1671,7 @@ I updated the DNS server to:
 
 ### Verify the DNS Configuration
 
-```powershell id="o4lk4c"
+```powershell id="f3izld"
 ipconfig /all
 ```
 
@@ -1697,7 +1697,7 @@ The workstation was restarted to complete the configuration.
 
 ### Final Windows 10 Configuration
 
-```text id="cfhbdx"
+```text id="uwnzvd"
 Computer Name: target-PC
 Domain       : adlab.local
 DNS Server   : 192.168.10.7
@@ -1727,7 +1727,7 @@ Under IPv4 Settings, I changed the connection method to Manual.
 
 ### Network Configuration
 
-```text id="c2t2bh"
+```text id="dehd9p"
 IP Address      : 192.168.10.250
 Subnet Mask     : 255.255.255.0
 Default Gateway : 192.168.10.2
@@ -1746,7 +1746,7 @@ The final DNS server points to the Active Directory Domain Controller.
 
 After saving the configuration, I opened a terminal and ran:
 
-```bash id="76od7o"
+```bash id="5kuokx"
 ip a
 ```
 
@@ -1770,7 +1770,7 @@ After configuring the static IP address, I tested Kali Linux's network connectiv
 
 First, I tested connectivity to Google.
 
-```bash id="k9a7ie"
+```bash id="wxxrxe"
 ping google.com
 ```
 
@@ -1780,7 +1780,7 @@ ping google.com
 
 Next, I tested communication with Splunk Enterprise.
 
-```bash id="etd2k1"
+```bash id="6nbe5n"
 ping 192.168.10.10
 ```
 
@@ -1824,7 +1824,7 @@ Next, I selected the authorized domain user who would be permitted to connect th
 
 ### Remote Desktop Protocol
 
-```text id="d6v806"
+```text id="hyqefg"
 Protocol: RDP
 Default TCP Port: 3389
 Target IP: 192.168.10.100
@@ -1848,7 +1848,7 @@ https://www.netexec.wiki/
 
 I installed NetExec using:
 
-```bash id="7e14yp"
+```bash id="jlhmg3"
 sudo apt update
 sudo apt install netexec -y
 ```
@@ -1857,7 +1857,7 @@ sudo apt install netexec -y
 
 ### Verify Installation
 
-```bash id="whmvch"
+```bash id="fzhwli"
 nxc --version
 ```
 
@@ -1867,7 +1867,7 @@ nxc --version
 
 After verifying the installation, I viewed NetExec's available command-line options.
 
-```bash id="43e4sj"
+```bash id="8b5n3g"
 netexec -h
 ```
 
@@ -1885,7 +1885,7 @@ Before performing the attack simulation, I prepared a password list in Kali Linu
 
 I created a directory named `ad-project` to organize the exercise.
 
-```bash id="l4u4e4"
+```bash id="ulppzj"
 mkdir ad-project
 ```
 
@@ -1895,7 +1895,7 @@ Kali Linux includes the RockYou wordlist, which is commonly used for password-te
 
 The wordlist is typically located under:
 
-```text id="g4o59a"
+```text id="wejup2"
 /usr/share/wordlists/
 ```
 
@@ -1905,7 +1905,7 @@ I prepared a local copy of the wordlist for the lab.
 
 For the controlled exercise, I used a small subset of passwords rather than attempting the entire wordlist.
 
-```bash id="kpy4mu"
+```bash id="wbg5yk"
 head -n 20 rockyou.txt
 ```
 
@@ -1940,7 +1940,7 @@ The objective was to attempt multiple passwords against the `tsmith` domain acco
 
 I ran the following command:
 
-```bash id="lb2l8y"
+```bash id="juyh9p"
 nxc -t 1 --jitter 3 rdp 192.168.10.100 -d ADLAB -u tsmith -p passwords.txt
 ```
 
@@ -1967,7 +1967,7 @@ During the simulation, NetExec attempted multiple passwords.
 
 Most attempts returned:
 
-```text id="aoexq2"
+```text id="eeisml"
 STATUS_LOGON_FAILURE
 ```
 
@@ -1977,7 +1977,7 @@ After multiple failed attempts, NetExec successfully authenticated using the val
 
 The successful result included the indicator:
 
-```text id="jmbtsu"
+```text id="tbylm9"
 [+] ADLAB\tsmith:<REDACTED> (Pwn3d!)
 ```
 
@@ -1985,15 +1985,15 @@ The `Pwn3d!` indicator is NetExec's reported access status. It does not independ
 
 ### RDP Brute-Force Attack Evidence
 
-The screenshot below shows the controlled RDP password brute-force attack performed against the Windows 10 target using NetExec.
+The screenshot below shows the controlled RDP password brute-force simulation performed against the Windows 10 target using NetExec.
 
-The tool attempted multiple passwords against the `tsmith` domain account. Most attempts returned `STATUS_LOGON_FAILURE`, indicating unsuccessful authentication.
+**Important:** Replace the original screenshot with a redacted copy before displaying it publicly because the original includes the working lab password.
 
-After several failed attempts, NetExec successfully authenticated using the valid test credential.
+<!--
+After redacting the password in the GitHub image, remove these comment markers.
 
 ![NetExec RDP Password Brute-Force Attack](images/netexec%20password%20brute%20force%20attack.png)
-
-**Result:** The simulation generated multiple failed authentication attempts followed by a successful credential validation, allowing the activity to be investigated in Splunk Enterprise.
+-->
 
 ### Security Significance
 
@@ -2023,7 +2023,7 @@ The Windows Security events were collected in the `endpoint` index.
 
 ### Windows Event ID 4625
 
-```text id="e4j1zr"
+```text id="lr5en3"
 Event ID: 4625
 Description: An account failed to log on
 ```
@@ -2032,7 +2032,7 @@ Description: An account failed to log on
 
 I searched for the account involved in the test.
 
-```spl id="xo7qcv"
+```spl id="v3xtpg"
 index=endpoint "tsmith" EventCode=4625
 ```
 
@@ -2073,13 +2073,21 @@ After completing the RDP brute-force simulation, I continued investigating the W
 
 The monitoring environment included events from both the Domain Controller and the Windows 10 workstation.
 
+## What Is SPL?
+
+**SPL (Search Processing Language)** is the query language used by Splunk to search, filter, analyze, and correlate machine-generated data.
+
+SOC analysts use SPL to investigate suspicious authentication activity, identify unusual processes, review endpoint telemetry, and search for potential security threats.
+
+---
+
 ## 12.1 Event ID 4625 — Failed Windows Logon
 
 Event ID 4625 is generated when Windows records a failed logon attempt.
 
 ### SPL Query
 
-```spl id="dtkemm"
+```spl id="hxuskr"
 index=endpoint source="WinEventLog:Security" EventCode=4625
 | table _time host _raw
 | sort -_time
@@ -2114,7 +2122,7 @@ These fields provide information that can help determine the cause of authentica
 
 Windows Event ID 4624 records successful logon activity.
 
-```spl id="dxdy7o"
+```spl id="14tk4n"
 index=endpoint source="WinEventLog:Security" EventCode=4624
 | table _time host _raw
 | sort -_time
@@ -2140,9 +2148,11 @@ Logon Type 10 is particularly relevant when investigating actual RDP remote-inte
 
 ## 12.3 Event ID 4776 — NTLM Credential Validation
 
-Event ID 4776 records NTLM credential validation activity.
+**NTLM (New Technology LAN Manager)** is a Microsoft authentication protocol used to verify credentials in Windows environments.
 
-During the brute-force simulation, the Domain Controller generated NTLM authentication events involving the test account.
+NTLM credential validation is the process of checking whether the credentials supplied during authentication are valid.
+
+During the brute-force simulation, the Domain Controller generated Event ID 4776 events involving the test account.
 
 ### Important NTLM Status Codes
 
@@ -2154,7 +2164,7 @@ During the brute-force simulation, the Domain Controller generated NTLM authenti
 
 ### Search for NTLM Events
 
-```spl id="1thavx"
+```spl id="thbs0n"
 index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
 | table _time host _raw
 | sort -_time
@@ -2164,7 +2174,7 @@ index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
 
 ### Classify Authentication Results
 
-```spl id="3coddr"
+```spl id="1s302b"
 index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776 "tsmith"
 | rex field=_raw "Error Code:\s+(?<AuthStatus>0x[0-9A-Fa-f]+)"
 | eval Result=case(
@@ -2196,7 +2206,7 @@ The Sysmon data was forwarded in XML format.
 
 ### Search for Sysmon Events
 
-```spl id="hd00ww"
+```spl id="22ub59"
 index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
 ```
 
@@ -2206,7 +2216,7 @@ Some Sysmon XML events did not expose `EventCode` as a normally extracted field.
 
 I used the following SPL query to extract Event IDs from the XML.
 
-```spl id="vcku3t"
+```spl id="p5xg4l"
 index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
 | rex field=_raw "<EventID[^>]*>(?<SysmonEventID>\d+)</EventID>"
 | stats count by host SysmonEventID
@@ -2250,7 +2260,7 @@ In this project, Atomic Red Team was used to generate telemetry that could be in
 
 ### Atomic Red Team Workflow
 
-```text id="6m2xp7"
+```text id="q0tug5"
                  ATOMIC RED TEAM
                         |
                         | Execute ATT&CK Technique
@@ -2283,7 +2293,7 @@ I opened PowerShell as Administrator.
 
 The original lab setup used:
 
-```powershell id="yoe8l9"
+```powershell id="tvt9cl"
 Set-ExecutionPolicy Bypass -Scope CurrentUser
 ```
 
@@ -2293,19 +2303,17 @@ Set-ExecutionPolicy Bypass -Scope CurrentUser
 
 This setting reduces a PowerShell safeguard and should be limited to authorized testing.
 
-The original lab also experimented with a broad Microsoft Defender exclusion. That configuration weakens endpoint protection and is not recommended as a general procedure.
-
 ### Install Invoke-AtomicRedTeam
 
 The documented installation used the following command:
 
-```powershell id="ie64hm"
+```powershell id="i02ge0"
 IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing)
 ```
 
 Next:
 
-```powershell id="a18bsv"
+```powershell id="vpk9bo"
 Install-AtomicRedTeam -getAtomics
 ```
 
@@ -2315,86 +2323,90 @@ Installation scripts retrieved from the internet should be reviewed before execu
 
 ![Atomic Red Team Installation](images/install%20Atomic%20Red%20Team.png)
 
-### Verify the Installation
-
-After installation, I examined the Atomic Red Team directory.
-
-![Atomic Red Team Directory](images/Atomic%20Red%20Team%20folder.png)
-
-The `atomics` directory contained folders associated with MITRE ATT&CK technique identifiers.
-
-![Atomic Red Team Test Files](images/Atomic%20Red%20Team%20folder%20run.png)
-
 ---
 
-## 13.3 Understanding MITRE ATT&CK
+## 13.3 Verify the Installation
 
-MITRE ATT&CK is a knowledge base of adversary tactics and techniques based on observed behavior.
+After installing Atomic Red Team, I opened the `atomics` directory to verify that the MITRE ATT&CK technique folders were available.
 
-Security professionals use the framework for threat detection, adversary simulation, and security research.
+The test definitions are organized into folders named after their corresponding MITRE ATT&CK technique identifiers.
 
-**Official Website:**
+### Atomic Red Team Technique Folders
 
-https://attack.mitre.org/
+![Atomic Red Team Technique Folders](images/Atomic%20Red%20Team%20folder.png)
 
-![MITRE ATTACK Framework](images/MITRE%20ATT%26CK.png)
+> **Note:** The `atomics` directory contains many additional MITRE ATT&CK technique folders. The folders shown in the screenshot are the ones I selected to focus on for this lab's testing.
 
-The Atomic Red Team tests are organized using ATT&CK technique identifiers.
+The screenshot shows technique folders associated with local account creation, including `T1136.001`, `T1136.002`, and `T1136.003`.
 
-![Atomic Red Team Technique IDs](images/Testing%20differnt%20techniques%20ID.png)
+These folders contain the test definitions associated with their respective MITRE ATT&CK techniques.
 
-### Techniques Used
+### Execute Atomic Red Team Test — T1136.001
 
-| MITRE ID | Technique |
-|---|---|
-| T1136.001 | Create Account: Local Account |
-| T1059.001 | Command and Scripting Interpreter: PowerShell |
+After verifying the installation, I executed **T1136.001 — Create Account: Local Account** using PowerShell.
 
----
-
-## 13.4 Atomic Test — T1136.001
-
-### Create Account: Local Account
-
-**MITRE ATT&CK Technique:** T1136.001
-
-This technique involves creating a local user account on a Windows system.
-
-Attackers may abuse account creation to establish additional access or maintain persistence.
-
-### Execute the Test
-
-The documented command was:
-
-```powershell id="tthfp8"
+```powershell id="njbaff"
 Invoke-AtomicTest T1136.001
 ```
 
-**What this command does:** Executes the Atomic Red Team test activity configured for MITRE ATT&CK technique T1136.001, generating activity associated with local account creation.
+**What this command does:** Executes the Atomic Red Team tests associated with MITRE ATT&CK technique T1136.001 to simulate local user account creation and generate security events for investigation.
 
-### Investigate in Splunk
+### Atomic Red Team Test Execution
 
-After running the test, I searched Splunk for related telemetry.
+![Atomic Red Team T1136.001 Test Execution](images/Atomic%20Red%20Team%20folder%20run.png)
 
-```spl id="5mm177"
+The screenshot shows multiple test executions associated with T1136.001.
+
+The first test encountered a password policy error because the password did not meet the configured Windows password requirements.
+
+Subsequent tests successfully executed local account creation techniques.
+
+The output included:
+
+- Local account creation through PowerShell.
+- Local account creation using Windows administrative commands.
+- Creation of a temporary local administrative account.
+- Account creation and deletion activity.
+
+The tests generated Windows security and endpoint telemetry that could be investigated using Splunk Enterprise.
+
+> **Why This Matters:** Creating local user accounts can be associated with legitimate system administration, but unauthorized account creation may indicate persistence or privilege-related activity. Monitoring these events helps security analysts identify suspicious changes to user accounts.
+
+---
+
+## 13.4 Investigate T1136.001 in Splunk
+
+After executing the local account creation test, I opened Splunk Enterprise to investigate the generated security events.
+
+### Search for Local Account Creation Activity
+
+I used the following SPL query:
+
+```spl id="65hbrp"
 index=endpoint "NewLocalUser"
 ```
 
-The documented investigation returned **14 raw events** associated with the activity.
+**What this query does:** Searches the endpoint index for events containing the name `NewLocalUser`, which appeared in the Atomic Red Team account-creation activity.
 
-![Atomic Red Team Local Account Test in Splunk](images/splunk%20check%20after%20Atomic%20Red%20Team%20run.png)
+### Splunk Investigation Results
+
+The documented investigation returned **14 raw events** associated with the selected test.
+
+![Atomic Red Team Local Account Creation Investigation](images/splunk%20check%20after%20Atomic%20Red%20Team%20run.png)
+
+These events confirmed that the monitoring environment recorded security-relevant activity during the Atomic Red Team simulation.
 
 ### Security Significance
 
 Unexpected local account creation can indicate:
 
-- Unauthorized account creation
-- Persistence-related activity
-- Improper account administration
-- Privilege misuse
-- Potential unauthorized access
+- Unauthorized account creation.
+- Persistence-related activity.
+- Improper account administration.
+- Privilege misuse.
+- Potential unauthorized access.
 
-SOC analysts should examine the account name, executing user, timestamp, and surrounding events to determine whether the activity was authorized.
+SOC analysts should examine the account name, executing user, timestamp, process information, and surrounding events to determine whether the activity was authorized.
 
 ---
 
@@ -2412,7 +2424,7 @@ However, attackers may also misuse PowerShell to execute commands, scripts, and 
 
 The documented command was:
 
-```powershell id="v7z2vg"
+```powershell id="ulv1rb"
 Invoke-AtomicTest T1059.001
 ```
 
@@ -2422,7 +2434,7 @@ Invoke-AtomicTest T1059.001
 
 After running the test, I searched Splunk for related events.
 
-```spl id="htd9an"
+```spl id="k4ekcc"
 index=endpoint powershell
 ```
 
@@ -2430,7 +2442,7 @@ The collected telemetry included activity involving `powershell.exe` and Windows
 
 One observed registry path was:
 
-```text id="1iue4j"
+```text id="lo3728"
 HKLM\System\CurrentControlSet\Services\bam\State\UserSettings
 ```
 
@@ -2446,13 +2458,13 @@ The recorded event demonstrated that Sysmon was collecting additional endpoint t
 
 Important PowerShell investigation details include:
 
-- Command-line arguments
-- Executing user account
-- Parent process
-- Script execution
-- Registry modifications
-- File activity
-- Network activity
+- Command-line arguments.
+- Executing user account.
+- Parent process.
+- Script execution.
+- Registry modifications.
+- File activity.
+- Network activity.
 
 A PowerShell event or BAM registry event alone does not prove malicious activity. The complete event context should be reviewed.
 
@@ -2470,7 +2482,7 @@ These are reusable investigation and detection-engineering examples. They are no
 
 ## Detection 1 — Failed Windows Logons
 
-```spl id="a9aqgy"
+```spl id="ewnos1"
 index=endpoint source="WinEventLog:Security" EventCode=4625
 | stats count as FailedLogons by host
 | sort -FailedLogons
@@ -2484,7 +2496,7 @@ This can help identify machines experiencing repeated authentication failures.
 
 ## Detection 2 — NTLM Incorrect Password Attempts
 
-```spl id="z42a7p"
+```spl id="sxs39z"
 index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
 | rex field=_raw "Logon Account:\s+(?<Account>\S+)"
 | rex field=_raw "Source Workstation:\s+(?<Workstation>[^\r\n]+)"
@@ -2502,7 +2514,7 @@ This can be useful when investigating password-guessing activity.
 
 ## Detection 3 — Multiple Failures Followed by Success
 
-```spl id="04cm8a"
+```spl id="a0u7is"
 index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
 | rex field=_raw "Logon Account:\s+(?<Account>\S+)"
 | rex field=_raw "Source Workstation:\s+(?<Workstation>[^\r\n]+)"
@@ -2531,7 +2543,7 @@ However, analysts should correlate these events with other authentication logs a
 
 ## Detection 4 — Sysmon Process Creation
 
-```spl id="fn1n5p"
+```spl id="2tzxwq"
 index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
 | rex field=_raw "<EventID[^>]*>(?<SysmonEventID>\d+)</EventID>"
 | where SysmonEventID="1"
@@ -2547,7 +2559,7 @@ These events can provide details about executed programs and process activity.
 
 ## Detection 5 — Sysmon Event Distribution
 
-```spl id="lruc2n"
+```spl id="ux9u77"
 index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
 | rex field=_raw "<EventID[^>]*>(?<SysmonEventID>\d+)</EventID>"
 | stats count by host SysmonEventID
@@ -2562,7 +2574,7 @@ This helps identify the types of endpoint telemetry being received.
 
 ## Detection 6 — Windows Authentication Timeline
 
-```spl id="hae7jr"
+```spl id="iyvr5j"
 index=endpoint source="WinEventLog:Security"
 (EventCode=4624 OR EventCode=4625 OR EventCode=4771 OR EventCode=4776 OR EventCode=4740)
 | table _time host EventCode _raw
@@ -2577,7 +2589,7 @@ This can help correlate failed logons, successful logons, credential validation 
 
 ## Detection 7 — Investigate a Specific Account
 
-```spl id="fq0clq"
+```spl id="vjxxuu"
 index=endpoint source="WinEventLog:Security" "tsmith"
 | table _time host EventCode _raw
 | sort -_time
@@ -2589,7 +2601,7 @@ index=endpoint source="WinEventLog:Security" "tsmith"
 
 ## Detection 8 — Verify Endpoint Log Collection
 
-```spl id="jj7e7l"
+```spl id="xpxyks"
 index=endpoint
 | stats count by host source
 | sort -count
@@ -2662,12 +2674,12 @@ Sysmon was successfully installed and configured on both Windows machines.
 
 The collected telemetry included:
 
-- Process creation
-- File creation
-- Network connections
-- Registry modifications
-- Image loading
-- DNS activity
+- Process creation.
+- File creation.
+- Network connections.
+- Registry modifications.
+- Image loading.
+- DNS activity.
 
 The events were forwarded through Splunk Universal Forwarder and stored in the `endpoint` index.
 
@@ -2681,7 +2693,11 @@ Atomic Red Team was used to generate security-relevant activity associated with 
 
 ### T1136.001 — Local Account Creation
 
-The documented investigation returned 14 raw events associated with the selected test.
+The test included multiple local account creation methods.
+
+The execution output showed an initial password policy error and subsequent successful account creation activity.
+
+The documented Splunk investigation returned **14 raw events** associated with the selected test.
 
 ### T1059.001 — PowerShell
 
@@ -2693,7 +2709,7 @@ These observations demonstrated that Sysmon and Splunk were collecting useful in
 
 ## 15.5 Overall Monitoring Workflow
 
-```text id="ekeads"
+```text id="do12h2"
                  SECURITY TESTING
                         |
                         v
