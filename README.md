@@ -1,7 +1,7 @@
 
 <div align="center">
 
-# 🛡️ Active Directory SOC HomeLab
+# 🛡️ Active Directory HomeLab
 
 ### Enterprise Security Monitoring & Threat Detection
 
@@ -2776,46 +2776,9 @@ It also provided a reusable HomeLab environment for future security monitoring, 
 
 ---
 
-# 17. References
-
-### Microsoft
-
-- [Windows 10 Installation Media](https://www.microsoft.com/software-download/windows10)
-- [Windows Server 2022](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
-- [Active Directory Domain Services](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/)
-- [Microsoft Sysmon](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon)
-- [Windows Security Auditing](https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/)
-
-### VMware
-
-- [VMware Documentation](https://techdocs.broadcom.com/)
-
-### Ubuntu
-
-- [Ubuntu Server](https://ubuntu.com/server)
-- [Ubuntu Server Documentation](https://documentation.ubuntu.com/server/)
-
-### Splunk
-
-- [Splunk Enterprise](https://www.splunk.com/)
-- [Splunk Documentation](https://docs.splunk.com/)
-- [Splunk Universal Forwarder](https://www.splunk.com/en_us/download/universal-forwarder.html)
-- [Splunk Search Reference](https://docs.splunk.com/Documentation/Splunk/latest/SearchReference/)
-
-### Security Testing and Monitoring
-
-- [Kali Linux](https://www.kali.org/)
-- [Olaf Hartong — Sysmon Modular](https://github.com/olafhartong/sysmon-modular)
-- [NetExec Documentation](https://www.netexec.wiki/)
-- [Atomic Red Team](https://github.com/redcanaryco/atomic-red-team)
-- [Invoke-AtomicRedTeam](https://github.com/redcanaryco/invoke-atomicredteam)
-- [MITRE ATT&CK Framework](https://attack.mitre.org/)
-
----
-
 <div align="center">
 
-### 🛡️ Active Directory SOC HomeLab
+### 🛡️ Active Directory HomeLab
 
 **Active Directory • Splunk Enterprise • Sysmon • Threat Detection • Purple Teaming**
 
