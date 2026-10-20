@@ -1,488 +1,446 @@
 
 # Active Directory SOC HomeLab
-### Active Directory | Splunk Enterprise | Sysmon | VMware | Kali Linux | NetExec | Atomic Red Team
 
-![Platform](https://img.shields.io/badge/Platform-VMware_Workstation-blue)
-![Operating Systems](https://img.shields.io/badge/Windows-10_%7C_Server_2022-blue)
+### Building and Monitoring an Active Directory Environment Using VMware, Splunk, Sysmon, Kali Linux, NetExec, and Atomic Red Team
+
+![Platform](https://img.shields.io/badge/Virtualization-VMware_Workstation-blue)
+![Operating System](https://img.shields.io/badge/Server-Windows_Server_2022-blue)
 ![SIEM](https://img.shields.io/badge/SIEM-Splunk_Enterprise-orange)
-![Monitoring](https://img.shields.io/badge/Monitoring-Sysmon-green)
-![Security](https://img.shields.io/badge/Security-Purple_Team-purple)
-
-## Project Overview
-
-This project documents the design, implementation, and security monitoring of a fully virtualized Active Directory environment using VMware Workstation Pro.
-
-The primary objective was to simulate a small enterprise network where I could configure Windows infrastructure, collect security logs, generate controlled attack activity, and investigate suspicious behavior using Splunk Enterprise.
-
-The environment consists of four virtual machines:
-
-- **Windows Server 2022:** Active Directory Domain Controller and DNS Server.
-- **Windows 10:** Domain-joined workstation used for security monitoring and testing.
-- **Ubuntu Server:** Hosts Splunk Enterprise for centralized security monitoring.
-- **Kali Linux:** Security testing machine used to simulate controlled authentication attacks.
-
-To collect endpoint telemetry, I installed Microsoft Sysmon using Olaf Hartong's modular configuration and deployed Splunk Universal Forwarder on both Windows machines.
-
-I configured Splunk Enterprise to collect Windows Security, System, Application, and Sysmon events in a dedicated index named `endpoint`.
-
-After configuring the environment, I performed controlled RDP authentication testing using NetExec and examined the resulting Windows authentication events in Splunk.
-
-I also used Atomic Red Team to simulate selected adversary techniques mapped to the MITRE ATT&CK framework.
-
-The overall purpose of this project was to develop practical experience in:
-
-- Active Directory administration
-- Windows Server configuration
-- Network configuration and troubleshooting
-- Security Information and Event Management (SIEM)
-- Windows event log analysis
-- Endpoint monitoring
-- Threat detection
-- Security investigations
-- Attack simulation
-- Detection engineering
-
-> **Disclaimer:** All security testing was performed within a personally controlled virtual environment for educational purposes. The attack simulations and techniques documented in this project were used only against authorized lab systems.
+![Monitoring](https://img.shields.io/badge/Endpoint-Sysmon-green)
+![Security](https://img.shields.io/badge/Security-Purple_Teaming-purple)
 
 ---
 
-## Table of Contents
+## Index
 
-1. [Network Architecture](#1-network-architecture)
-2. [Tools and Technologies](#2-tools-and-technologies)
-3. [Virtual Machine Installation](#3-virtual-machine-installation)
-4. [VMware Network Configuration](#4-vmware-network-configuration)
-5. [Ubuntu Server and Splunk Installation](#5-ubuntu-server-and-splunk-installation)
-6. [Active Directory Domain Services](#6-active-directory-domain-services)
-7. [Active Directory Users and Organizational Units](#7-active-directory-users-and-organizational-units)
-8. [Joining Windows 10 to Active Directory](#8-joining-windows-10-to-active-directory)
-9. [Sysmon Installation and Configuration](#9-sysmon-installation-and-configuration)
-10. [Splunk Universal Forwarder Configuration](#10-splunk-universal-forwarder-configuration)
-11. [Kali Linux Network Configuration](#11-kali-linux-network-configuration)
-12. [RDP Authentication Testing with NetExec](#12-rdp-authentication-testing-with-netexec)
-13. [Investigating Authentication Events in Splunk](#13-investigating-authentication-events-in-splunk)
-14. [Atomic Red Team Attack Simulation](#14-atomic-red-team-attack-simulation)
-15. [Splunk Detection Queries](#15-splunk-detection-queries)
-16. [Challenges and Troubleshooting](#16-challenges-and-troubleshooting)
-17. [Project Results](#17-project-results)
-18. [Lessons Learned](#18-lessons-learned)
-19. [Security Considerations](#19-security-considerations)
-20. [References](#20-references)
+1. [Introduction](#introduction)
+2. [Network Architecture](#network-architecture)
+3. [Setting Up the Virtual Machines](#setting-up-the-virtual-machines)
+   - [Software Requirements](#software-requirements)
+   - [Installing Windows 10](#installing-windows-10)
+   - [Installing Kali Linux](#installing-kali-linux)
+   - [Installing Windows Server 2022](#installing-windows-server-2022)
+   - [Installing Ubuntu Server](#installing-ubuntu-server)
+4. [Configuring the VMware Network](#configuring-the-vmware-network)
+5. [Installing and Configuring Splunk Enterprise](#installing-and-configuring-splunk-enterprise)
+6. [Installing Splunk Universal Forwarder and Sysmon](#installing-splunk-universal-forwarder-and-sysmon)
+7. [Installing and Configuring Active Directory](#installing-and-configuring-active-directory)
+8. [Creating Organizational Units and Users](#creating-organizational-units-and-users)
+9. [Joining Windows 10 to Active Directory](#joining-windows-10-to-active-directory)
+10. [Configuring Kali Linux for Security Testing](#configuring-kali-linux-for-security-testing)
+11. [RDP Authentication Testing Using NetExec](#rdp-authentication-testing-using-netexec)
+12. [Investigating Authentication Events in Splunk](#investigating-authentication-events-in-splunk)
+13. [Testing with Atomic Red Team](#testing-with-atomic-red-team)
+14. [Splunk Detection Queries](#splunk-detection-queries)
+15. [Challenges and Troubleshooting](#challenges-and-troubleshooting)
+16. [Project Results](#project-results)
+17. [Lessons Learned](#lessons-learned)
+18. [Conclusion](#conclusion)
+19. [References](#references)
 
 ---
 
-# 1. Network Architecture
+## Introduction
 
-The first stage of the project involved designing the network architecture for the Active Directory SOC HomeLab.
+The purpose of this project was to build a virtual Active Directory environment and implement centralized security monitoring using Splunk Enterprise and Microsoft Sysmon.
 
-The network was designed to simulate a small organization consisting of an Active Directory Domain Controller, a Windows workstation, a centralized Splunk server, and a separate security testing machine.
+I wanted to gain practical experience with Windows system administration, Active Directory, network configuration, SIEM technologies, endpoint monitoring, and security event investigation.
 
-All virtual machines communicate through a VMware NAT network.
+The project also provided an opportunity to understand how security analysts detect and investigate suspicious activity within an organization's network.
 
-### Network Diagram
+To accomplish this, I created four virtual machines using VMware Workstation Pro.
 
-![Active Directory SOC HomeLab Network Architecture](assets/screenshots/architecture/01-lab-logical-diagram.jpeg)
+- **Windows Server 2022:** Hosts Active Directory Domain Services and DNS.
+- **Windows 10:** Acts as a domain-joined workstation and monitored endpoint.
+- **Ubuntu Server:** Hosts Splunk Enterprise for centralized log management.
+- **Kali Linux:** Performs authorized security testing against the Windows workstation.
 
-The architecture illustrates the relationship between the virtual machines, centralized monitoring infrastructure, and virtual network.
+After establishing the virtual environment, I installed Splunk Universal Forwarder and Sysmon on the Windows machines to collect Windows Security, System, Application, and endpoint telemetry.
+
+I then performed controlled RDP authentication testing from Kali Linux using NetExec and investigated the resulting authentication events in Splunk.
+
+Finally, I used Atomic Red Team to simulate selected MITRE ATT&CK techniques and analyze the endpoint activity they generated.
+
+The goal was not simply to run security tools, but to understand how attacker behavior can be observed through Windows logs and analyzed from a defensive security perspective.
+
+> **Disclaimer:** This project was conducted entirely within an authorized virtual HomeLab. All attack simulations and authentication tests were performed against systems and accounts created specifically for educational purposes.
+
+---
+
+## Network Architecture
+
+Before creating the virtual machines, I designed a network diagram to understand how the different components would communicate.
+
+The lab consists of one Domain Controller, one domain-joined Windows workstation, one Splunk Enterprise server, and one Kali Linux security testing machine.
+
+![Active Directory Lab Network Diagram](images/Lab%20Logical%20Diagram.jpeg)
 
 ### Network Configuration
 
-| Component | IP Address | Purpose |
+| Component | IP Address | Description |
 |---|---|---|
-| Network | 192.168.10.0/24 | Private lab network |
-| VMware NAT Gateway | 192.168.10.2 | Internet gateway |
-| VMware Host Adapter | 192.168.10.1 | Host-side network interface |
-| Domain Controller | 192.168.10.7 | AD DS and DNS |
-| Splunk Server | 192.168.10.10 | Centralized log collection |
+| Network | 192.168.10.0/24 | VMware NAT network |
+| VMware NAT Gateway | 192.168.10.2 | Provides outbound connectivity |
+| VMware Host Adapter | 192.168.10.1 | Host-side virtual interface |
+| Splunk Server | 192.168.10.10 | Centralized SIEM |
+| Active Directory Server | 192.168.10.7 | Domain Controller and DNS |
 | Windows 10 Target | 192.168.10.100 | Domain-joined workstation |
 | Kali Linux | 192.168.10.250 | Security testing machine |
 
-### Active Directory Domain
+### Active Directory Information
 
 ```text
-DNS Domain: adlab.local
+Domain Name: adlab.local
 NetBIOS Domain: ADLAB
 Domain Controller: ADDC01
-Windows Client: target-PC
+Windows Workstation: target-PC
 ```
 
-The original network diagram uses HomeLab as an informal project label. The actual Active Directory DNS domain configured during implementation was `adlab.local`.
+All four machines were connected to the same VMware NAT network.
 
-### How the Network Works
+The Domain Controller manages authentication and domain services, while the Windows 10 workstation represents an employee computer.
 
-The Windows Server 2022 machine acts as the Domain Controller and provides centralized authentication and DNS services.
+The Ubuntu server receives Windows event logs and Sysmon telemetry through Splunk Universal Forwarder.
 
-Windows 10 is joined to the Active Directory domain, allowing domain users to authenticate using their assigned accounts.
+Kali Linux is used to generate controlled security activity against the Windows workstation.
 
-The Ubuntu Splunk Server receives logs from both Windows machines using Splunk Universal Forwarder.
-
-Kali Linux is used to generate controlled security events against the Windows 10 workstation.
-
-The activity is recorded by Windows Event Logging and Sysmon, forwarded to Splunk Enterprise, and analyzed using Splunk Search Processing Language (SPL).
-
-### Security Monitoring Workflow
+### Security Monitoring Process
 
 ```text
-Kali Linux
-192.168.10.250
-      |
-      | Controlled security testing
-      v
-Windows 10 Target
-192.168.10.100
-      |
-      | Windows Security Logs
-      | Sysmon Events
-      v
-Splunk Universal Forwarder
-      |
-      | TCP 9997
-      v
-Splunk Enterprise
-192.168.10.10
-      |
-      v
-Security Event Analysis
-      |
-      v
-Threat Detection and Investigation
+                 KALI LINUX
+                192.168.10.250
+                       |
+                       | Controlled Attack Simulation
+                       |
+                       v
+                WINDOWS 10 TARGET
+                192.168.10.100
+                       |
+                  Windows Events
+                  Sysmon Events
+                       |
+                       v
+               SPLUNK UNIVERSAL
+                   FORWARDER
+                       |
+                       | TCP Port 9997
+                       |
+                       v
+                SPLUNK ENTERPRISE
+                 192.168.10.10
+                       |
+                       v
+                SECURITY ANALYSIS
+                       |
+                       v
+            Threat Detection and Investigation
 ```
 
-The Domain Controller also sends its Windows Security and Sysmon logs to Splunk, allowing domain authentication activity to be correlated with events on the workstation.
+The Domain Controller also forwards security events to Splunk, allowing authentication requests to be investigated across multiple machines.
 
 ---
 
-# 2. Tools and Technologies
+# Setting Up the Virtual Machines
 
-The following technologies were used to implement the project.
+## Software Requirements
 
-| Technology | Purpose |
+The following software and operating systems were used during the project.
+
+| Software | Purpose |
 |---|---|
-| VMware Workstation Pro | Virtual machine management |
-| Windows Server 2022 | Active Directory infrastructure |
-| Windows 10 Pro | Domain-joined endpoint |
-| Ubuntu Server | Linux operating system for Splunk |
-| Kali Linux | Authorized security testing |
-| Active Directory Domain Services | User and computer authentication |
-| DNS Server | Active Directory domain name resolution |
-| Splunk Enterprise | SIEM and centralized security monitoring |
-| Splunk Universal Forwarder | Event log forwarding |
-| Microsoft Sysmon | Detailed Windows endpoint telemetry |
-| Olaf Hartong Sysmon Modular | Sysmon filtering configuration |
-| NetExec | Controlled RDP authentication testing |
-| Atomic Red Team | ATT&CK-mapped attack simulation |
-| MITRE ATT&CK | Adversary behavior classification |
-| PowerShell | Windows configuration and administration |
-| SPL | Security log searching and analysis |
+| VMware Workstation Pro | Virtualization |
+| Windows 10 Pro | Target workstation |
+| Windows Server 2022 | Active Directory Domain Controller |
+| Ubuntu Server | Splunk Enterprise host |
+| Kali Linux 2026.2 | Security testing |
+| Splunk Enterprise | Centralized SIEM |
+| Splunk Universal Forwarder | Log forwarding |
+| Microsoft Sysmon | Endpoint telemetry |
+| Olaf Hartong Sysmon Modular | Sysmon configuration |
+| NetExec | Controlled authentication testing |
+| Atomic Red Team | Adversary technique simulation |
+| PowerShell | Administration and automation |
 
-The tools were selected to provide experience with both Windows system administration and SOC-focused security monitoring.
+Each virtual machine was created and configured based on its role in the network.
 
 ---
 
-# 3. Virtual Machine Installation
+## Installing Windows 10
 
-The environment was created using VMware Workstation Pro.
+The first virtual machine I configured was Windows 10.
 
-Four virtual machines were prepared to represent the different components of the organization.
+This machine acts as a target workstation and is later joined to the Active Directory domain.
 
-## 3.1 Windows 10 Installation
-
-The first virtual machine was Windows 10 Pro.
+### Step 1: Download Windows 10
 
 I downloaded the Windows 10 installation media from Microsoft's official website.
 
-**Download:**
+**Download:** https://www.microsoft.com/software-download/windows10
 
-https://www.microsoft.com/software-download/windows10
+After downloading the Media Creation Tool, I opened it and accepted the Microsoft license terms.
 
-### Installation Procedure
+![Windows 10 Download](images/Windows%2010%20Installation%20media.png)
 
-1. Download the Windows 10 Media Creation Tool.
-2. Run the Media Creation Tool.
-3. Accept the Microsoft license agreement.
-4. Select **Create installation media**.
-5. Select the preferred language and 64-bit architecture.
-6. Choose **ISO file**.
-7. Save the installation ISO.
-8. Open VMware Workstation Pro.
-9. Select **Create a New Virtual Machine**.
-10. Choose **Typical (recommended)**.
-11. Select the downloaded ISO.
-12. Name the virtual machine `Windows 10 AD-Lab`.
-13. Assign 50 GB of virtual disk capacity.
-14. Review the virtual hardware.
-15. Start the virtual machine.
-16. Follow the Windows installation wizard.
-17. Select Windows 10 Pro.
-18. Choose **Custom: Install Windows only**.
-19. Complete Windows setup using a local account.
+The next step was to select **Create installation media** rather than upgrading the current computer.
 
-Windows 10 Pro was selected because it supports Active Directory domain membership and Remote Desktop hosting.
+![Create Installation Media](images/create%20installatin%20media.png)
 
-After installation, I configured its network settings and changed the computer name to `target-PC`.
+I selected the recommended language and architecture settings.
 
-### Windows 10 Installation Screenshots
+![Recommended Installation Settings](images/Use%20recommended%20option%20when%20upgrading.png)
 
-![Windows 10 VM Configuration](assets/screenshots/windows10-installation/10-vm-review.png)
+Next, I selected the ISO file option so the installation media could be attached to VMware.
+
+![Choose ISO File](images/choose%20iso%20file.png)
+
+### Step 2: Create the Virtual Machine
+
+After obtaining the ISO file, I opened VMware Workstation Pro and selected **Create a New Virtual Machine**.
+
+I selected **Typical (recommended)** because the standard VMware configuration was sufficient for the lab.
+
+![Create Virtual Machine](images/VMware%20VM%20creation%20type.png)
+
+I then selected the Windows installation ISO.
+
+![Select Installation ISO](images/choose%20iso%20file%20in%20VMware.png)
+
+The virtual machine was named:
+
+```text
+Windows 10 AD-Lab
+```
+
+![Virtual Machine Name](images/VM%20naming.png)
+
+For the virtual disk, I allocated 50 GB.
+
+![Virtual Disk Configuration](images/VM%20Capacity.png)
+
+After reviewing the virtual machine configuration, I selected Finish.
+
+![Review Virtual Machine](images/VM%20review.png)
+
+### Step 3: Install Windows 10
+
+After starting the virtual machine, the Windows installation wizard appeared.
+
+![Windows Installation Wizard](images/Windows%2010%20installation%20setup.png)
+
+I selected **Install Now**.
+
+![Install Windows](images/Windows%2010%20installation%20setup%20install%20now.png)
+
+During installation, I selected Windows 10 Pro.
+
+Windows 10 Pro was important for this project because it supports Active Directory domain joining and hosting Remote Desktop connections.
+
+![Windows Edition](images/choose%20version.png)
+
+Next, I selected **Custom: Install Windows only (advanced)**.
+
+![Custom Installation](images/choose%20custom.png)
+
+I selected the available virtual disk and continued the installation.
+
+![Windows Virtual Disk](images/disk%20info.png)
+
+![Windows Installation Progress](images/Windows%2010%20installing.png)
+
+After completing the installation, I configured a local account and finished the initial Windows setup.
+
+This machine was later renamed `target-PC` and joined to the Active Directory domain.
 
 <details>
-<summary><strong>View all Windows 10 installation screenshots</strong></summary>
+<summary><strong>Additional Windows 10 installation screenshots</strong></summary>
 
-![Installation Media](assets/screenshots/windows10-installation/01-windows-10-installation-media.png)
+![Windows License Terms](images/Windows%2010%20License%20terms.png)
 
-![License Terms](assets/screenshots/windows10-installation/02-windows-10-license-terms.png)
+![Product Key](images/product%20key.png)
 
-![Create Installation Media](assets/screenshots/windows10-installation/03-create-installatin-media.png)
-
-![Recommended Options](assets/screenshots/windows10-installation/04-use-recommended-option-when-upgrading.png)
-
-![ISO Selection](assets/screenshots/windows10-installation/05-choose-iso-file.png)
-
-![VMware Creation](assets/screenshots/windows10-installation/06-vmware-vm-creation-type.png)
-
-![Attach ISO](assets/screenshots/windows10-installation/07-choose-iso-file-in-vmware.png)
-
-![VM Naming](assets/screenshots/windows10-installation/08-vm-naming.png)
-
-![Disk Capacity](assets/screenshots/windows10-installation/09-vm-capacity.png)
-
-![Windows Setup](assets/screenshots/windows10-installation/11-windows-10-installation-setup.png)
-
-![Install Now](assets/screenshots/windows10-installation/12-windows-10-installation-setup-install-now.png)
-
-![Product Key](assets/screenshots/windows10-installation/13-product-key.png)
-
-![Windows Edition](assets/screenshots/windows10-installation/14-choose-version.png)
-
-![Windows License](assets/screenshots/windows10-installation/15-license-term.png)
-
-![Custom Installation](assets/screenshots/windows10-installation/16-choose-custom.png)
-
-![Disk Configuration](assets/screenshots/windows10-installation/17-disk-info.png)
-
-![Windows Installing](assets/screenshots/windows10-installation/18-windows-10-installing.png)
+![License Agreement](images/license%20term.png)
 
 </details>
 
-## 3.2 Kali Linux Installation
+---
 
-Kali Linux was deployed using the official pre-built VMware virtual machine.
+## Installing Kali Linux
 
-**Download:**
+The next machine I installed was Kali Linux.
 
-https://www.kali.org/get-kali/#kali-virtual-machines
+Kali Linux is a Debian-based distribution commonly used for penetration testing, vulnerability assessments, and cybersecurity training.
 
-### Installation Procedure
+For this project, I downloaded the pre-built VMware image rather than performing a traditional ISO installation.
 
-1. Navigate to Kali Linux's official website.
-2. Select **Virtual Machines**.
-3. Download the VMware image.
-4. Extract the `.7z` archive using 7-Zip.
-5. Open the extracted virtual machine directory.
-6. Locate the VMware configuration file.
-7. Open the configuration using VMware Workstation.
-8. Verify the virtual hardware settings.
-9. Configure the network adapter.
-10. Start Kali Linux.
+**Download:** https://www.kali.org/get-kali/#kali-virtual-machines
 
-The version used for the project was Kali Linux 2026.2.
+### Step 1: Download the Pre-Built Image
 
-Kali was selected because it provides tools for network testing, authentication testing, security investigations, and other cybersecurity exercises.
+On the Kali Linux website, I selected the VMware virtual machine image.
 
-### Kali Linux Installation Screenshots
+![Kali Linux Pre-Built Image](images/kali%20linux%20pre-built.png)
 
-![Kali Linux VMware](assets/screenshots/kali-vm-installation/03-linux-in-vmware.png)
+The downloaded package was compressed in `.7z` format.
 
-<details>
-<summary><strong>View additional Kali installation screenshots</strong></summary>
+I extracted it using 7-Zip and located the VMware virtual machine configuration file.
 
-![Kali Download](assets/screenshots/kali-vm-installation/01-kali-linux-pre-built.png)
+### Step 2: Import the Machine into VMware
 
-![Open Prebuilt Image](assets/screenshots/kali-vm-installation/02-open-pre-built.png)
+After extracting the archive, I opened the VMware configuration file.
 
-</details>
+![Open Kali Linux Configuration](images/open%20pre-built.png)
 
-## 3.3 Windows Server 2022 Installation
+VMware automatically recognized the virtual machine.
 
-Windows Server 2022 was used as the Active Directory Domain Controller.
+![Kali Linux in VMware](images/linux%20in%20VMware.png)
 
-**Download:**
+After importing the virtual machine, I reviewed the settings and configured its network adapter to use the lab's custom NAT network.
 
-https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022
+Kali Linux was used later to perform controlled security testing against the Windows 10 workstation.
 
-### Installation Procedure
+---
 
-1. Download the Windows Server 2022 ISO.
-2. Create a new VM in VMware.
-3. Attach the installation ISO.
-4. Allocate the required CPU, RAM, and disk resources.
-5. Install Windows Server 2022.
-6. Configure the local Administrator password.
-7. Sign in to Windows Server.
-8. Verify Server Manager opens.
-9. Configure the static network address.
-10. Rename the server to `ADDC01`.
+## Installing Windows Server 2022
 
-Windows Server was later promoted to a Domain Controller and configured with Active Directory Domain Services and DNS.
+Windows Server 2022 was installed to host Active Directory Domain Services.
 
-### Windows Server Installation Screenshots
+**Download:** https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022
 
-![Windows Server Installation Complete](assets/screenshots/windows-server-installation/04-server-installation-complete.png)
+### Step 1: Download Windows Server
 
-<details>
-<summary><strong>View additional Windows Server installation screenshots</strong></summary>
+I downloaded the Windows Server 2022 ISO from Microsoft's official evaluation website.
 
-![Windows Server ISO](assets/screenshots/windows-server-installation/01-windows-server-iso-page.png)
+![Windows Server Download](images/Windows%20Server%20iso%20page.png)
 
-![Server Installation](assets/screenshots/windows-server-installation/02-windows-server-installing.png)
+### Step 2: Create the Virtual Machine
 
-![Administrator Setup](assets/screenshots/windows-server-installation/03-admin-user-creation-on-server.png)
+I created a new VMware virtual machine and attached the Windows Server ISO.
 
-</details>
+The installation process was similar to the Windows 10 installation.
 
-## 3.4 Ubuntu Server Installation
+I selected the Windows Server edition with Desktop Experience so I could configure Active Directory through Server Manager and graphical administration tools.
 
-Ubuntu Server was selected to host Splunk Enterprise.
+![Windows Server Installation](images/Windows%20Server%20installing.png)
 
-**Download:**
+### Step 3: Create the Administrator Account
 
-https://ubuntu.com/server
+After installation, Windows Server prompted me to configure the local Administrator password.
 
-### Installation Procedure
+![Administrator Account Setup](images/Admin%20User%20creation%20on%20Server.png)
 
-1. Download Ubuntu Server.
-2. Create a VMware virtual machine.
-3. Attach the Ubuntu Server ISO.
-4. Boot into the installer.
-5. Select **Try or Install Ubuntu Server**.
-6. Configure the language and keyboard.
-7. Complete the network and storage setup.
-8. Create the Linux user account.
-9. Complete the Ubuntu installation.
-10. Restart and sign in.
+Once the password was configured, I signed in as Administrator.
 
-After installation, I updated the operating system:
+The Server Manager dashboard appeared, confirming that the initial operating system installation was complete.
+
+![Windows Server Installation Complete](images/Server%20installation%20complete.png)
+
+The next steps involved assigning a static IP address, renaming the server, and configuring Active Directory.
+
+---
+
+## Installing Ubuntu Server
+
+Ubuntu Server was installed to host Splunk Enterprise.
+
+**Download:** https://ubuntu.com/server
+
+### Step 1: Download Ubuntu Server
+
+I downloaded the Ubuntu Server ISO and created another virtual machine in VMware Workstation.
+
+![Ubuntu Server Download](images/Ubuntu%20Server%20page.png)
+
+### Step 2: Install Ubuntu
+
+After attaching the ISO and starting the virtual machine, I selected **Try or Install Ubuntu Server**.
+
+![Ubuntu Installation](images/Ubuntu%20Server%20installation%20page.png)
+
+During installation, I configured the server's hostname, local username, and password.
+
+![Ubuntu Account Configuration](images/Ubuntu%20Server%20User%20account%20creation.png)
+
+After installation, I restarted the server and signed in.
+
+![Ubuntu Server Login](images/Splunk%20Server%20login%20page.png)
+
+### Step 3: Update Ubuntu
+
+I updated the package lists and installed available updates:
 
 ```bash
 sudo apt update
 sudo apt upgrade -y
 ```
 
-These commands refresh the package metadata and install available package upgrades.
+The first command refreshes information about packages available in the configured repositories.
 
-### Ubuntu Installation Screenshots
+The second command installs available upgrades.
 
-![Ubuntu Server Login](assets/screenshots/ubuntu-installation/04-splunk-server-login-page.png)
+![Ubuntu Updates](images/splunk%20server%20updates.png)
 
-<details>
-<summary><strong>View additional Ubuntu installation screenshots</strong></summary>
+![Ubuntu Package Upgrades](images/splunk%20server%20packet%20updates.png)
 
-![Ubuntu Download](assets/screenshots/ubuntu-installation/01-ubuntu-server-page.png)
-
-![Ubuntu Installer](assets/screenshots/ubuntu-installation/02-ubuntu-server-installation-page.png)
-
-![Ubuntu User Creation](assets/screenshots/ubuntu-installation/03-ubuntu-server-user-account-creation.png)
-
-![Ubuntu Updates](assets/screenshots/ubuntu-installation/05-splunk-server-updates.png)
-
-![Ubuntu Package Updates](assets/screenshots/ubuntu-installation/06-splunk-server-packet-updates.png)
-
-</details>
+After completing the updates, I proceeded to configure VMware networking.
 
 ---
 
-# 4. VMware Network Configuration
+# Configuring the VMware Network
 
-After installing the virtual machines, the next step was configuring a network that would allow all systems to communicate.
+Before installing security tools, I needed to make sure all virtual machines could communicate with one another.
 
-I used VMware Workstation Pro's Virtual Network Editor to configure the built-in NAT network `VMnet8`.
+I used VMware Workstation's Virtual Network Editor to configure the NAT network.
 
-## 4.1 Configuring VMnet8
+## Step 1: Configure VMnet8
 
-In VMware Workstation:
+In VMware Workstation, I opened:
 
-1. Open **Edit**.
-2. Select **Virtual Network Editor**.
-3. Select `VMnet8`.
-4. Configure the network type as NAT.
-5. Set the subnet IP to `192.168.10.0`.
-6. Set the subnet mask to `255.255.255.0`.
-7. Open **NAT Settings**.
-8. Configure the gateway address as `192.168.10.2`.
-9. Apply the settings.
+**Edit → Virtual Network Editor**
 
-### Network Settings
+I selected `VMnet8` and configured it as a NAT network.
+
+The subnet was changed to:
 
 ```text
-Network: VMnet8
-Type: NAT
-Subnet: 192.168.10.0
+Network: 192.168.10.0
+Subnet Mask: 255.255.255.0
 CIDR: /24
-Subnet Mask: 255.255.255.0
 NAT Gateway: 192.168.10.2
-Host Adapter: 192.168.10.1
 ```
 
-The `/24` CIDR notation is equivalent to the subnet mask `255.255.255.0`.
+![VMware Virtual Network Configuration](images/Virtual%20Network%20Configuration.png)
 
-### Why NAT?
+The NAT gateway allows the virtual machines to access external networks through the VMware host.
 
-NAT provides outbound connectivity through the VMware host while placing the virtual machines on a separate virtual subnet.
+One issue I encountered was attempting to use `192.168.10.1` as the gateway.
 
-This allows the systems to communicate without directly bridging them onto the physical LAN.
+However, `192.168.10.1` was assigned to the VMware host adapter.
 
-However, NAT is not complete isolation. Firewall controls and appropriate lab boundaries are still important.
+I corrected the NAT gateway to `192.168.10.2`, which resolved the issue.
 
-## 4.2 Assigning the Network to Each VM
+## Step 2: Connect All Virtual Machines to VMnet8
 
-For every virtual machine:
+For each virtual machine, I opened:
 
-1. Open **Virtual Machine Settings**.
-2. Select **Network Adapter**.
-3. Choose **Custom: Specific virtual network**.
-4. Select `VMnet8`.
-5. Enable **Connect at power on**.
-6. Save the settings.
+**Virtual Machine Settings → Network Adapter**
 
-This ensured all four machines used the same virtual network.
+I selected **Custom: Specific virtual network**, then chose `VMnet8`.
 
-## 4.3 Configuring the Domain Controller IP
+![Configure VMware Network Adapter](images/Set%20VM%20to%20custom%20Virtual%20Network.png)
 
-The Windows Server was assigned:
+This step was repeated for all four virtual machines.
 
-```text
-IP Address: 192.168.10.7
-Subnet Mask: 255.255.255.0
-Default Gateway: 192.168.10.2
-DNS Server: 192.168.10.7
-```
+## Step 3: Assign a Static IP to the Splunk Server
 
-The Domain Controller uses its own DNS service after AD DS and DNS configuration.
+The Splunk server required a static IP address because Windows endpoints needed a consistent destination for forwarding logs.
 
-## 4.4 Configuring Windows 10
-
-The Windows workstation was configured with:
-
-```text
-IP Address: 192.168.10.100
-Subnet Mask: 255.255.255.0
-Default Gateway: 192.168.10.2
-DNS Server: 192.168.10.7
-```
-
-Using the Domain Controller as the DNS server is necessary for reliable Active Directory discovery and domain joining.
-
-## 4.5 Configuring the Ubuntu Splunk Server
-
-Ubuntu was assigned a static IPv4 address using Netplan.
-
-Open the configuration file:
+I opened Ubuntu's Netplan configuration:
 
 ```bash
 sudo nano /etc/netplan/00-installer-config.yaml
 ```
 
-Example configuration:
+The network was configured with the following information:
 
 ```yaml
 network:
@@ -501,235 +459,247 @@ network:
           via: 192.168.10.2
 ```
 
-This is a simplified representation. The original lab file also included interface MAC matching and interface naming.
+The lab's original configuration also included interface matching and naming information.
 
-Save the file, then apply the configuration:
+![Splunk Static IP Configuration](images/splunk%20server%20network%20configuration.png)
+
+After saving the file, I applied the settings:
 
 ```bash
-sudo netplan generate
 sudo netplan apply
 ```
 
-Verify the address:
+To verify the assigned IP address:
 
 ```bash
 ip a
 ```
 
-Verify routing:
+![Verify Splunk IP Address](images/ip%20address%20splunk%20server1.png)
+
+![Splunk IP Address Updated](images/ip%20address%20splunk%20server2.png)
+
+Next, I tested connectivity:
 
 ```bash
-ip route
-```
-
-Test connectivity:
-
-```bash
-ping -c 4 192.168.10.2
-ping -c 4 8.8.8.8
 ping -c 4 google.com
 ```
 
-### Network Troubleshooting
+```bash
+ping -c 4 192.168.10.2
+```
 
-During configuration, the Ubuntu server initially could not reach the internet.
+![Splunk Connectivity Test](images/splunk%20server%20ping.png)
 
-The issue occurred because `192.168.10.1` was already assigned to the Windows host-side VMware network adapter while I had also attempted to use it as the NAT gateway.
+The ping tests confirmed that the server could communicate over the network.
 
-I corrected the NAT gateway to `192.168.10.2` and updated Ubuntu's default route accordingly.
+## Step 4: Configure Windows Server Networking
 
-After applying the changes, Ubuntu successfully communicated with the gateway and external hosts.
+The Windows Server was assigned:
 
-This troubleshooting experience helped reinforce the differences between a host virtual adapter, virtual gateway, and endpoint IP address.
+```text
+IP Address: 192.168.10.7
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.10.2
+DNS Server: 192.168.10.7
+```
 
-### VMware Network Screenshots
+![Windows Server IP Configuration](images/windows%20server%20ip%20change.png)
 
-![VMware Network Configuration](assets/screenshots/vmware-network/01-virtual-network-configuration.png)
+I renamed the Windows Server to `ADDC01`.
 
-<details>
-<summary><strong>View all additional VMware networking screenshots</strong></summary>
+![Rename Windows Server](images/Windows%20Server%20name%20change.png)
 
-![Custom VM Network](assets/screenshots/vmware-network/02-set-vm-to-custom-virtual-network.png)
+I also tested network connectivity.
 
-![Splunk Network](assets/screenshots/vmware-network/03-splunk-server-network-configuration.png)
+![Windows Server Ping Test](images/Windows%20server%20ping.png)
 
-![Splunk IP](assets/screenshots/vmware-network/04-ip-address-splunk-server1.png)
+## Step 5: Configure Windows 10 Networking
 
-![Splunk IP Verification](assets/screenshots/vmware-network/05-ip-address-splunk-server2.png)
+The Windows 10 workstation was assigned:
 
-![Splunk Ping](assets/screenshots/vmware-network/06-splunk-server-ping.png)
+```text
+Computer Name: target-PC
+IP Address: 192.168.10.100
+Subnet Mask: 255.255.255.0
+Default Gateway: 192.168.10.2
+DNS Server: 192.168.10.7
+```
 
-![Server IP](assets/screenshots/vmware-network/07-windows-server-ip-change.png)
+I first renamed the workstation.
 
-![Server Name](assets/screenshots/vmware-network/08-windows-server-name-change.png)
+![Rename Windows 10](images/rename%20target%20pc.png)
 
-![Server Connectivity](assets/screenshots/vmware-network/09-windows-server-ping.png)
+Next, I configured its IP settings.
 
-![Target Rename](assets/screenshots/vmware-network/10-rename-target-pc.png)
+![Windows 10 Ethernet Settings](images/Ethernet%20Target%20machine.png)
 
-![Target Name Verification](assets/screenshots/vmware-network/11-verify-target-machine-name.png)
+![Windows 10 Static IP](images/target%20machine%20ip%20change.png)
 
-![Target Ethernet](assets/screenshots/vmware-network/12-ethernet-target-machine.png)
-
-![Target IP](assets/screenshots/vmware-network/13-target-machine-ip-change.png)
-
-</details>
+The Windows 10 machine uses the Domain Controller as its DNS server so that it can resolve Active Directory services.
 
 ---
 
-# 5. Ubuntu Server and Splunk Installation
+# Installing and Configuring Splunk Enterprise
 
-The Ubuntu Server was prepared to run Splunk Enterprise as the centralized monitoring platform.
+After completing the virtual network setup, I proceeded to install Splunk Enterprise on the Ubuntu Server.
 
-## 5.1 Installing VMware Tools
+Splunk is a Security Information and Event Management platform that can collect, index, search, and analyze machine-generated data.
 
-VMware Tools improves communication between the host and guest operating systems.
+For this project, Splunk was used to monitor security events generated by Windows Server 2022 and Windows 10.
 
-On Ubuntu Server, I installed `open-vm-tools`:
+## Step 1: Download Splunk Enterprise
+
+I visited the official Splunk website and downloaded the Linux `.deb` installation package.
+
+**Website:** https://www.splunk.com/
+
+The version used during this project was Splunk Enterprise 10.6.1.1.
+
+![Splunk Enterprise Download](images/Splunk%20enterprise%20image%20download.png)
+
+## Step 2: Install VMware Tools
+
+Before transferring the Splunk installer, I installed `open-vm-tools` to improve integration between Ubuntu and VMware.
 
 ```bash
-sudo apt update
 sudo apt install open-vm-tools -y
 ```
 
-Enable the service:
+I then enabled the service:
 
 ```bash
 sudo systemctl enable --now open-vm-tools
 ```
 
-Verify:
+To verify:
 
 ```bash
 systemctl status open-vm-tools
 ```
 
-The service reported an active running status.
+![VMware Tools Verification](images/open-vm-tools%20verify%20splunk%20server.png)
 
-## 5.2 Installing SSH
+The service was running successfully.
 
-To transfer the Splunk installer from my Windows host to Ubuntu, I installed OpenSSH Server.
+## Step 3: Configure SSH
+
+To transfer the Splunk installation package from my Windows computer to Ubuntu, I installed OpenSSH Server.
 
 ```bash
 sudo apt install openssh-server -y
 ```
 
-Enable SSH:
+Then:
 
 ```bash
 sudo systemctl enable --now ssh
 ```
 
-Verify:
+Verify the service:
 
 ```bash
 sudo systemctl status ssh
 ```
 
-Where UFW is active, access to SSH can be restricted to the Windows VMware host:
+![SSH Service Verification](images/systemctl%20status%20ssh.png)
+
+When Ubuntu's UFW firewall is enabled, SSH access can be restricted to the host computer:
 
 ```bash
 sudo ufw allow from 192.168.10.1 to any port 22 proto tcp
 ```
 
-## 5.3 Downloading Splunk Enterprise
+![SSH Firewall Configuration](images/Allow%20SSH%20from%20Windows%20in%20Splunk%20Server.png)
 
-I downloaded the Linux `.deb` package for Splunk Enterprise from the official Splunk website.
+## Step 4: Transfer the Splunk Installer
 
-https://www.splunk.com/
+I downloaded the Splunk installation file to my Windows host computer and transferred it to Ubuntu using SCP.
 
-The lab used Splunk Enterprise version 10.6.1.1.
+SCP stands for Secure Copy Protocol and uses SSH to securely transfer files between systems.
 
-The downloaded installer was stored on my Windows computer before being transferred to Ubuntu.
-
-## 5.4 Transferring Splunk to Ubuntu
-
-I used SCP to transfer the installation package.
-
-From Windows PowerShell:
+From Windows PowerShell, I navigated to the drive containing the installer.
 
 ```powershell
 cd F:\
 ```
 
-Then:
+Then I ran:
 
 ```powershell
 scp .\splunk-10.6.1.1-b2ae2962645c-linux-amd64.deb rangeuser21@192.168.10.10:/home/rangeuser21/
 ```
 
-SCP transfers files securely using SSH.
+![Transferring Splunk Installer](images/splunk%20installation%20file%20transfer%20to%20VMware.png)
 
-After the transfer, I verified the package existed on Ubuntu:
+After the transfer, I verified the installer existed on Ubuntu:
 
 ```bash
 ls -lh ~/splunk*.deb
 ```
 
-Because Splunk was distributed as a `.deb` installer, mounting an ISO was unnecessary.
+![Splunk File Verification](images/file%20transfer%20verify.png)
 
-## 5.5 Installing Splunk Enterprise
+## Step 5: Install Splunk
 
-On Ubuntu:
+Because Splunk was downloaded as a Debian package, I did not need to mount an ISO file.
+
+I installed it directly using:
 
 ```bash
 sudo apt install ~/splunk-10.6.1.1-b2ae2962645c-linux-amd64.deb
 ```
 
-Verify the package:
+![Splunk Installation](images/install%20splunk.png)
 
-```bash
-dpkg -s splunk | grep -E 'Status|Version'
-```
-
-The main Splunk directory is:
+After installation, I verified the Splunk files were located under:
 
 ```text
 /opt/splunk/
 ```
 
-Important subdirectories:
+### Important Splunk Directories
 
 | Directory | Purpose |
 |---|---|
-| `/opt/splunk/bin/` | Splunk executables |
-| `/opt/splunk/etc/` | Splunk configuration |
-| `/opt/splunk/var/log/splunk/` | Internal Splunk logs |
-| `/opt/splunk/var/lib/splunk/` | Indexed data |
+| `/opt/splunk/bin/` | Executables |
+| `/opt/splunk/etc/` | Configuration files |
+| `/opt/splunk/var/log/splunk/` | Internal operational logs |
+| `/opt/splunk/var/lib/splunk/` | Indexed event data |
 
-## 5.6 Starting Splunk Enterprise
+![Splunk Directory](images/splunk%20directory%20users%20and%20groups.png)
 
-The documented setup used the dedicated `splunk` service account.
+## Step 6: Start Splunk Enterprise
+
+For the documented lab setup, I used the dedicated `splunk` account to start the service.
 
 ```bash
 sudo -u splunk /opt/splunk/bin/splunk start --accept-license
 ```
 
-During initial startup, Splunk administrator credentials were configured.
+![Starting Splunk](images/splunk%20server%20start%20with%20the%20user%20splunk.png)
 
-Boot-start configuration can be enabled using supported Splunk CLI options for the installed version and service account.
+During the initial startup, I configured the Splunk administrator credentials.
 
-## 5.7 Accessing Splunk Web
+## Step 7: Access Splunk Web
 
-From the Windows host, I accessed:
+Once Splunk started successfully, I opened a browser on my Windows host and navigated to:
 
 ```text
 http://192.168.10.10:8000
 ```
 
-Port usage:
+Port 8000 is used for accessing Splunk Web.
 
-| Port | Purpose |
-|---|---|
-| TCP 8000 | Splunk Web |
-| TCP 9997 | Splunk Forwarder receiving port |
-| TCP 22 | SSH access to Ubuntu |
+![Splunk Enterprise Dashboard](images/splunk%20server%20dashboard.png)
 
-### Splunk Storage Troubleshooting
+At this point, Splunk Enterprise was running successfully.
 
-During Splunk installation, the Ubuntu filesystem ran out of available space.
+### Storage Issue Encountered
 
-The installer produced:
+During the installation, Ubuntu initially ran out of storage space.
+
+The system returned:
 
 ```text
 No space left on device
@@ -737,22 +707,16 @@ No space left on device
 
 I expanded the VMware virtual disk to 40 GB.
 
-However, expanding the virtual disk in VMware did not automatically expand the filesystem inside Ubuntu.
+Because Ubuntu used LVM, the additional disk space was not immediately available to the operating system.
 
-The system used LVM, so I examined the partition layout:
+After examining the storage configuration with:
 
 ```bash
 lsblk
 df -h
 ```
 
-The lab's root volume was located on:
-
-```text
-/dev/ubuntu-vg/ubuntu-lv
-```
-
-After verifying the partition layout and expanding the VMware disk, I extended the Linux partition and LVM storage:
+I expanded the relevant partition and logical volume:
 
 ```bash
 sudo growpart /dev/sda 3
@@ -760,807 +724,715 @@ sudo pvresize /dev/sda3
 sudo lvextend -l +100%FREE -r /dev/ubuntu-vg/ubuntu-lv
 ```
 
-These commands apply to the specific LVM layout in this lab and should not be run blindly on another system.
+These commands applied to this lab's verified LVM configuration and are not universal disk-resizing commands.
 
-After resizing, Ubuntu recognized approximately 38 GB of root filesystem capacity, allowing the Splunk installation to complete.
+After expanding the filesystem, Ubuntu had sufficient available space to complete the installation.
 
-This demonstrated the difference between virtual disk capacity and usable space inside the guest operating system.
-
-### Splunk Server Screenshots
-
-![Splunk Dashboard](assets/screenshots/splunk-server/10-splunk-server-dashboard.png)
-
-<details>
-<summary><strong>View all additional Splunk installation screenshots</strong></summary>
-
-![Splunk Download](assets/screenshots/splunk-server/01-splunk-enterprise-image-download.png)
-
-![VMware Tools](assets/screenshots/splunk-server/02-open-vm-tools-verify-splunk-server.png)
-
-![SSH Service](assets/screenshots/splunk-server/03-systemctl-status-ssh.png)
-
-![SSH Firewall Rule](assets/screenshots/splunk-server/04-allow-ssh-from-windows-in-splunk-server.png)
-
-![Installer Transfer](assets/screenshots/splunk-server/05-splunk-installation-file-transfer-to-vmware.png)
-
-![Transfer Verification](assets/screenshots/splunk-server/06-file-transfer-verify.png)
-
-![Install Splunk](assets/screenshots/splunk-server/07-install-splunk.png)
-
-![Splunk Directory](assets/screenshots/splunk-server/08-splunk-directory-users-and-groups.png)
-
-![Splunk Startup](assets/screenshots/splunk-server/09-splunk-server-start-with-the-user-splunk.png)
-
-![Splunk Web](assets/screenshots/splunk-server/11-target-machine-splunk.png)
-
-</details>
+This troubleshooting process helped me understand the difference between expanding a VMware virtual disk and expanding the Linux guest filesystem.
 
 ---
 
-# 6. Active Directory Domain Services
+# Installing Splunk Universal Forwarder and Sysmon
 
-After configuring Splunk, I installed and configured Active Directory Domain Services on Windows Server 2022.
+The next stage involved installing Splunk Universal Forwarder and Microsoft Sysmon on both Windows 10 and Windows Server 2022.
 
-Active Directory provides centralized identity management, authentication, authorization, and administration for Windows domain environments.
+These tools allow endpoint events to be collected and sent to the centralized Splunk Enterprise Server.
 
-## 6.1 Installing AD DS
+## Splunk Universal Forwarder
 
-On Windows Server:
+Universal Forwarder is a lightweight Splunk agent used to collect data and forward it to a Splunk receiver.
 
-1. Open **Server Manager**.
-2. Click **Manage**.
-3. Select **Add Roles and Features**.
-4. Choose **Role-based or feature-based installation**.
-5. Select the local Windows Server.
-6. Select **Active Directory Domain Services**.
-7. Add the required management features.
-8. Continue through the installation wizard.
-9. Click **Install**.
+### Step 1: Download Universal Forwarder
 
-After installing the AD DS role, the server must be promoted to a Domain Controller.
+I downloaded the Windows x64 version from the official Splunk website.
 
-## 6.2 Promoting the Server
+**Download:** https://www.splunk.com/en_us/download/universal-forwarder.html
 
-In Server Manager:
+![Universal Forwarder Download](images/splunk%20universal%20forwarder%20image%20download.png)
 
-1. Click the notification flag.
-2. Select **Promote this server to a domain controller**.
-3. Choose **Add a new forest**.
-4. Enter the domain name:
+After downloading the installer, I opened it on Windows 10.
+
+![Universal Forwarder Installer](images/splunk%20universal%20forwarder%20setup%20start.png)
+
+I followed the installation wizard and configured the receiving indexer.
+
+### Receiving Indexer Configuration
 
 ```text
-adlab.local
+Splunk Server: 192.168.10.10
+Receiving Port: 9997
 ```
 
-5. Configure the Domain Controller options.
-6. Set the Directory Services Restore Mode password.
-7. Review DNS configuration.
-8. Review the AD DS database paths.
-9. Complete prerequisite checks.
-10. Click **Install**.
+![Splunk Receiving Indexer](images/splunk%20universal%20forwarder%20splunk%20server%20ip.png)
 
-The Domain Controller restarts after promotion.
-
-## 6.3 Active Directory Database
-
-During configuration, the wizard displays the paths used by Active Directory.
-
-One important database file is:
-
-```text
-NTDS.dit
-```
-
-This database stores important Active Directory information.
-
-From a security perspective, unauthorized access to AD database files can represent a serious credential exposure risk.
-
-SOC analysts should understand why suspicious access to Active Directory database files deserves further investigation.
-
-## 6.4 Verifying the Domain Controller
-
-After promotion, I verified Active Directory management tools were available.
-
-PowerShell commands:
-
-```powershell
-Get-ADDomain
-```
-
-```powershell
-Get-ADForest
-```
-
-The domain was configured as:
-
-```text
-DNS Domain: adlab.local
-NetBIOS Domain: ADLAB
-Domain Controller: ADDC01
-```
-
-### Active Directory Setup Screenshots
-
-![AD DS Installation Complete](assets/screenshots/active-directory-setup/11-active-directory-installation-complete.png)
+I left the Deployment Server field blank because I was not using a dedicated deployment server.
 
 <details>
-<summary><strong>View all additional Active Directory installation screenshots</strong></summary>
+<summary><strong>Additional Universal Forwarder installation screenshot</strong></summary>
 
-![Add Roles](assets/screenshots/active-directory-setup/01-add-roles-and-features.png)
-
-![Role-Based Installation](assets/screenshots/active-directory-setup/02-role-based-or-feature-based.png)
-
-![Destination Server](assets/screenshots/active-directory-setup/03-select-destination-server.png)
-
-![Server Roles](assets/screenshots/active-directory-setup/04-select-server-roles.png)
-
-![AD DS Selected](assets/screenshots/active-directory-setup/05-active-directory-domain-services-selected.png)
-
-![Post Deployment](assets/screenshots/active-directory-setup/06-ad-post-deployment-configuration.png)
-
-![New Forest](assets/screenshots/active-directory-setup/07-add-a-new-forest.png)
-
-![Forest Password Setup](assets/screenshots/active-directory-setup/08-forest-password-set.png)
-
-![Active Directory Paths](assets/screenshots/active-directory-setup/09-ad-paths.png)
-
-![Prerequisites](assets/screenshots/active-directory-setup/10-prerequisites-check.png)
-
-![Domain Administrator Login](assets/screenshots/active-directory-setup/12-adlab-administrator-logon.png)
+![Universal Forwarder Setup](images/splunk%20universal%20forwarder%20setup%20.png)
 
 </details>
 
----
+## Installing Sysmon
 
-# 7. Active Directory Users and Organizational Units
+Sysmon is a Microsoft Sysinternals tool that monitors Windows system activity and generates detailed event logs.
 
-After installing Active Directory, I configured Organizational Units and created user accounts for the environment.
+It records security-relevant activities such as process creation, network connections, file creation, registry changes, and DNS queries.
 
-Organizational Units provide a way to organize users, computers, and other Active Directory objects.
+### Step 1: Download Sysmon
 
-## 7.1 Opening Active Directory Users and Computers
+**Microsoft Sysmon:** https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
 
-Navigate to:
+I downloaded Sysmon from Microsoft's official website.
 
-```text
-Server Manager
-    |
-    Tools
-    |
-    Active Directory Users and Computers
-```
+For the configuration, I used Olaf Hartong's Sysmon Modular project.
 
-I explored the domain's built-in containers and groups to understand how Active Directory organizes objects.
+**GitHub:** https://github.com/olafhartong/sysmon-modular
 
-## 7.2 Creating Organizational Units
+![Olaf Sysmon Configuration](images/Olaf%20configuration%20file%20link.png)
 
-I created Organizational Units representing departments within the simulated organization.
+I selected the balanced configuration and downloaded the XML file.
 
-Examples:
+![Sysmon Configuration](images/Olaf%20configuration.png)
 
-```text
-adlab.local
-|
-+-- IT
-|
-+-- HR
-```
+### Step 2: Extract Sysmon
 
-This provides a basic departmental structure.
+After downloading Sysmon, I extracted the files.
 
-In enterprise environments, Organizational Units can also support Group Policy application and delegated administrative responsibilities.
+![Sysmon Extracted](images/sysmon%20file%20extracted.png)
 
-## 7.3 Creating Domain Users
+### Step 3: Install Sysmon
 
-Inside the IT Organizational Unit, I created a test user named Jenny Smith.
+I opened PowerShell as Administrator and navigated to the extracted Sysmon directory.
 
-Additional test users were created for Active Directory authentication and access-control exercises.
-
-### Procedure
-
-1. Right-click the selected Organizational Unit.
-2. Select **New → User**.
-3. Enter the user's name.
-4. Configure the logon name.
-5. Set an appropriate test password.
-6. Select the applicable account settings.
-7. Complete the user creation wizard.
-
-I also reviewed user account properties and group membership.
-
-These exercises helped me understand how domain users are created, managed, and authenticated.
-
-### Active Directory Users Screenshots
-
-![User Group Verification](assets/screenshots/active-directory-users/07-user-group-verify2.png)
-
-<details>
-<summary><strong>View additional user-management screenshots</strong></summary>
-
-![AD Users and Computers](assets/screenshots/active-directory-users/01-ad-users-and-computers.png)
-
-![Built-in Groups](assets/screenshots/active-directory-users/02-user-and-computers-builtins-groups.png)
-
-![IT OU](assets/screenshots/active-directory-users/03-it-ou-creation.png)
-
-![User Creation](assets/screenshots/active-directory-users/04-user-creation.png)
-
-![User Password Configuration](assets/screenshots/active-directory-users/05-user-password-set.png)
-
-![User Group](assets/screenshots/active-directory-users/06-user-group-verify.png)
-
-</details>
-
----
-
-# 8. Joining Windows 10 to Active Directory
-
-The next stage involved joining the Windows 10 target machine to the `adlab.local` domain.
-
-Domain membership allows the workstation to authenticate domain users and communicate with centralized Active Directory services.
-
-## 8.1 Configure DNS
-
-Before joining the domain, I configured the Windows 10 DNS server:
-
-```text
-192.168.10.7
-```
-
-This points the workstation to the Domain Controller's DNS service.
-
-## 8.2 Join the Domain
-
-On Windows 10:
-
-1. Open **This PC → Properties**.
-2. Select **Advanced system settings**.
-3. Open the **Computer Name** tab.
-4. Click **Change**.
-5. Select **Domain**.
-6. Enter:
-
-```text
-adlab.local
-```
-
-7. Provide authorized domain credentials.
-8. Confirm the domain join.
-9. Restart Windows.
-
-After successfully joining, Windows displayed a welcome message confirming domain membership.
-
-## 8.3 Troubleshooting Domain Join
-
-The initial domain join attempt failed because the workstation was not correctly configured to locate the Domain Controller through DNS.
-
-After changing the preferred DNS server to `192.168.10.7`, the domain join succeeded.
-
-To verify DNS and domain discovery:
-
-```powershell
-ipconfig /all
-```
-
-```powershell
-nltest /dsgetdc:adlab.local
-```
-
-The `nltest` command confirms that the Windows workstation can locate the Domain Controller.
-
-### Domain Join Screenshots
-
-![Successful Domain Join](assets/screenshots/domain-join/07-domain-joined.png)
-
-<details>
-<summary><strong>View additional domain join screenshots</strong></summary>
-
-![Windows System Properties](assets/screenshots/domain-join/01-w10-system-properties.png)
-
-![Join Domain](assets/screenshots/domain-join/02-w10-join-domain.png)
-
-![Domain Join Error](assets/screenshots/domain-join/03-join-domain-error.png)
-
-![DNS Correction](assets/screenshots/domain-join/04-add-dns-server-as-windows-server-ip.png)
-
-![IP Configuration](assets/screenshots/domain-join/05-ipconfig-all.png)
-
-![Domain Credentials](assets/screenshots/domain-join/06-credentials-for-domain-change.png)
-
-</details>
-
----
-
-# 9. Sysmon Installation and Configuration
-
-Sysmon (System Monitor) is a Microsoft Sysinternals utility that records detailed Windows system activity.
-
-Sysmon provides additional endpoint visibility beyond traditional Windows Security logs.
-
-This includes:
-
-- Process creation
-- Network connections
-- File creation
-- Registry modifications
-- Image and DLL loading
-- DNS queries
-- Selected process-access activity
-
-Sysmon was installed on:
-
-- Windows 10 Target
-- Windows Server 2022 Domain Controller
-
-## 9.1 Download Sysmon
-
-Official download:
-
-https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon
-
-After downloading Sysmon, I extracted the package.
-
-## 9.2 Olaf Hartong's Sysmon Modular Configuration
-
-Instead of using only default Sysmon settings, I configured Sysmon using Olaf Hartong's modular configuration.
-
-Repository:
-
-https://github.com/olafhartong/sysmon-modular
-
-The modular configuration contains event-filtering rules designed to collect security-relevant telemetry while reducing unnecessary noise.
-
-I used the balanced configuration appropriate for the installed Sysmon version.
-
-## 9.3 Install Sysmon
-
-With `Sysmon64.exe` and the selected configuration file in the same directory, open PowerShell as Administrator.
+The installation command was:
 
 ```powershell
 .\Sysmon64.exe -accepteula -i .\sysmonconfig.xml
 ```
 
-**Explanation:** Installs Sysmon using the specified monitoring configuration.
+The configuration file path must match the actual location where the downloaded XML was saved.
 
-If Sysmon is already installed, update the configuration instead:
-
-```powershell
-.\Sysmon64.exe -c .\sysmonconfig.xml
-```
-
-Verify the Sysmon service:
-
-```powershell
-Get-Service Sysmon64
-```
-
-## 9.4 View Sysmon Logs
-
-Sysmon events are available in:
-
-```text
-Event Viewer
-    |
-    Applications and Services Logs
-    |
-    Microsoft
-    |
-    Windows
-    |
-    Sysmon
-    |
-    Operational
-```
+![Sysmon Installation](images/sysmon%20installation.png)
 
 ### Important Sysmon Event IDs
 
-| Event ID | Description | Security Relevance |
-|---|---|---|
-| 1 | Process Creation | Suspicious command execution |
-| 3 | Network Connection | Suspicious outbound/inbound activity |
-| 7 | Image Loaded | DLL monitoring |
-| 10 | Process Access | Possible credential access |
-| 11 | File Creation | Suspicious file activity |
-| 12 | Registry Object Created/Deleted | Registry monitoring |
-| 13 | Registry Value Set | Persistence investigation |
-| 22 | DNS Query | Suspicious domain resolution |
-| 25 | Process Tampering | Process manipulation |
+| Event ID | Description |
+|---|---|
+| 1 | Process creation |
+| 3 | Network connection |
+| 7 | Image loaded |
+| 10 | Process access |
+| 11 | File creation |
+| 12 | Registry object created/deleted |
+| 13 | Registry value set |
+| 22 | DNS query |
+| 25 | Process tampering |
 
-The actual events recorded depend on the Sysmon configuration and system activity.
+These events provide additional visibility into activities occurring on Windows endpoints.
 
-### Sysmon Screenshots
+The specific events generated depend on the Sysmon filtering configuration.
 
-![Sysmon Installed](assets/screenshots/sysmon/04-sysmon-installation.png)
+## Configuring Splunk Universal Forwarder
 
-<details>
-<summary><strong>View additional Sysmon screenshots</strong></summary>
+Installing Universal Forwarder alone does not tell Splunk which Windows events should be collected.
 
-![Olaf Sysmon Link](assets/screenshots/sysmon/01-olaf-configuration-file-link.png)
+I therefore configured an `inputs.conf` file.
 
-![Olaf Configuration](assets/screenshots/sysmon/02-olaf-configuration.png)
+### Step 1: Create inputs.conf
 
-![Sysmon Extracted](assets/screenshots/sysmon/03-sysmon-file-extracted.png)
-
-</details>
-
----
-
-# 10. Splunk Universal Forwarder Configuration
-
-Splunk Universal Forwarder is a lightweight agent designed to collect and forward machine data to a Splunk server.
-
-In this project, the Universal Forwarder was installed on both Windows 10 and Windows Server 2022.
-
-The Forwarder sends Windows Event Logs to the Ubuntu Splunk Enterprise server.
-
-## 10.1 Download Universal Forwarder
-
-Official website:
-
-https://www.splunk.com/en_us/download/universal-forwarder.html
-
-I downloaded the Windows x64 installation package.
-
-## 10.2 Universal Forwarder Installation
-
-During installation, I configured the receiving indexer:
-
-```text
-Receiving Server: 192.168.10.10
-Receiving Port: 9997
-```
-
-The deployment server field was left blank because a separate deployment server was not used in this lab.
-
-The documented setup used Local System for access to Windows Security logs. This is suitable for the controlled lab configuration but is more privileged than desirable for many production deployments.
-
-## 10.3 Configure inputs.conf
-
-The Universal Forwarder uses configuration files to determine which data sources to monitor.
-
-The configuration file was created at:
+The configuration file was saved at:
 
 ```text
 C:\Program Files\SplunkUniversalForwarder\etc\system\local\inputs.conf
 ```
 
-### Configuration
+The `local` directory is used for custom settings.
+
+I opened Notepad as Administrator so I could save the file.
+
+![Open Notepad as Administrator](images/open%20notepad%20as%20admin.png)
+
+### Step 2: Configure Windows Event Logs
+
+I added the following configuration:
 
 ```ini
 [WinEventLog://Application]
 index = endpoint
-disabled = 0
+disabled = false
 
 [WinEventLog://Security]
 index = endpoint
-disabled = 0
+disabled = false
 
 [WinEventLog://System]
 index = endpoint
-disabled = 0
+disabled = false
 
 [WinEventLog://Microsoft-Windows-Sysmon/Operational]
 index = endpoint
-disabled = 0
+disabled = false
 renderXml = true
 source = XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
 ```
 
-### Configuration Explanation
+### Explanation
 
-**Application:** Collects application events and errors.
+- **Application:** Collects Windows application events.
+- **Security:** Collects authentication and security-related events.
+- **System:** Collects operating system and service events.
+- **Sysmon:** Collects detailed endpoint telemetry.
+- **index = endpoint:** Directs events to the Splunk `endpoint` index.
+- **renderXml = true:** Preserves the Sysmon events in XML format.
 
-**Security:** Collects authentication, authorization, account activity, and other security-related events.
+![Save inputs.conf](images/save%20the%20inputs.conf%20file.png)
 
-**System:** Collects Windows operating system and service events.
+### Step 3: Restart Universal Forwarder
 
-**Sysmon:** Collects detailed endpoint telemetry generated by Sysmon.
-
-**index = endpoint:** Sends the events to the dedicated Splunk index.
-
-**renderXml = true:** Preserves the Sysmon events in XML format, which is useful for detailed field extraction.
-
-## 10.4 Restart Universal Forwarder
-
-After modifying `inputs.conf`:
+After saving the configuration, I restarted the Splunk Forwarder service.
 
 ```powershell
 Restart-Service SplunkForwarder
 ```
 
-Verify the service:
+To verify:
 
 ```powershell
 Get-Service SplunkForwarder
 ```
 
-## 10.5 Create the endpoint Index
+The service was running successfully.
 
-In Splunk Web:
+![Forwarder Service](images/splunk%20fordwarder%20service%20check.png)
 
-1. Open **Settings**.
-2. Select **Indexes**.
-3. Click **New Index**.
-4. Enter:
+<details>
+<summary><strong>Additional Forwarder service screenshots</strong></summary>
+
+![Forwarder Service Verification](images/splunk%20fordwarder%20service1.png)
+
+![Forwarder Service Configuration](images/splunk%20fordwarder%20service2.png)
+
+</details>
+
+### Step 4: Create the endpoint Index
+
+Next, I opened Splunk Enterprise.
+
+Navigate to:
+
+**Settings → Indexes → New Index**
+
+I created an index named:
 
 ```text
 endpoint
 ```
 
-5. Save the new index.
+![Create endpoint Index](images/create%20a%20new%20index.png)
 
-This index stores the Windows and Sysmon data collected from the endpoints.
+This index stores the Windows and Sysmon telemetry collected by the Universal Forwarders.
 
-## 10.6 Configure Receiving Port
+### Step 5: Enable Splunk Receiving
 
-Navigate to:
+In Splunk Enterprise, I navigated to:
 
-```text
-Settings
-    |
-Forwarding and Receiving
-    |
-Configure Receiving
-    |
-New Receiving Port
-```
+**Settings → Forwarding and Receiving → Configure Receiving**
 
-Enter:
+![Forwarding and Receiving](images/forwarding%20and%20receiving.png)
+
+I configured TCP port:
 
 ```text
 9997
 ```
 
-This allows Splunk Enterprise to receive data from the Universal Forwarders.
+![Configure Receiving Port](images/forwarding%20and%20receiving%20add%20the%20port%20number.png)
 
-## 10.7 Verify Forwarder Connectivity
+### Step 6: Verify Log Collection
 
-On Windows:
+After completing the configurations, I opened Search & Reporting.
 
-```powershell
-Test-NetConnection 192.168.10.10 -Port 9997
+The following SPL query was used:
+
+```spl
+index=endpoint
 ```
 
-Expected result:
-
-```text
-TcpTestSucceeded : True
-```
-
-## 10.8 Verify Data in Splunk
-
-In Search & Reporting:
+I then checked the hosts sending data.
 
 ```spl
 index=endpoint
 | stats count by host source
-| sort -count
 ```
 
-This displays the event sources associated with each monitored host.
+![Splunk Host Verification](images/splunk%20search%20query%20host%20check.png)
 
-The observed environment contained event data from:
+After installing Universal Forwarder and Sysmon on both Windows machines, Splunk showed events from:
 
 ```text
-ADDC01
 target-PC
+ADDC01
 ```
 
-The collected sources included:
+![Both Windows Hosts](images/splunk%20query%20host%20update.png)
 
-```text
-WinEventLog:Application
-WinEventLog:System
-WinEventLog:Security
-XmlWinEventLog:Microsoft-Windows-Sysmon/Operational
-```
+The collected data included Windows Security, Application, System, and Sysmon logs.
 
-### Universal Forwarder Screenshots
+![Splunk Log Sources](images/splunk%20index%20source%20check.png)
 
-![Splunk Event Sources](assets/screenshots/splunk-forwarder/15-splunk-index-source-check.png)
+![Splunk Access from Target](images/target%20machine%20splunk.png)
 
-<details>
-<summary><strong>View additional Splunk Forwarder screenshots</strong></summary>
-
-![Download](assets/screenshots/splunk-forwarder/01-splunk-universal-forwarder-image-download.png)
-
-![Setup Start](assets/screenshots/splunk-forwarder/02-splunk-universal-forwarder-setup-start.png)
-
-![Setup](assets/screenshots/splunk-forwarder/03-splunk-universal-forwarder-setup.png)
-
-![Indexer Address](assets/screenshots/splunk-forwarder/04-splunk-universal-forwarder-splunk-server-ip.png)
-
-![Administrator Notepad](assets/screenshots/splunk-forwarder/05-open-notepad-as-admin.png)
-
-![Inputs Configuration](assets/screenshots/splunk-forwarder/06-save-the-inputs-conf-file.png)
-
-![Forwarder Service](assets/screenshots/splunk-forwarder/07-splunk-fordwarder-service-check.png)
-
-![Forwarder Service Verification](assets/screenshots/splunk-forwarder/08-splunk-fordwarder-service1.png)
-
-![Forwarder Service Details](assets/screenshots/splunk-forwarder/09-splunk-fordwarder-service2.png)
-
-![New Index](assets/screenshots/splunk-forwarder/10-create-a-new-index.png)
-
-![Forwarding and Receiving](assets/screenshots/splunk-forwarder/11-forwarding-and-receiving.png)
-
-![Receiving Port](assets/screenshots/splunk-forwarder/12-forwarding-and-receiving-add-the-port-number.png)
-
-![Host Search](assets/screenshots/splunk-forwarder/13-splunk-search-query-host-check.png)
-
-![Updated Host Search](assets/screenshots/splunk-forwarder/14-splunk-query-host-update.png)
-
-</details>
+At this stage, the centralized logging environment was functioning successfully.
 
 ---
 
-# 11. Kali Linux Network Configuration
+# Installing and Configuring Active Directory
 
-After configuring the monitoring infrastructure, I prepared Kali Linux for authorized security testing.
+After the virtual network and Splunk monitoring infrastructure were configured, I installed Active Directory Domain Services on Windows Server 2022.
 
-Kali was assigned a static IP address on the same virtual network.
+Active Directory allows organizations to centrally manage users, computers, permissions, and authentication.
 
-### Network Configuration
+## Step 1: Install Active Directory Domain Services
+
+On Windows Server, I opened Server Manager and selected:
+
+**Manage → Add Roles and Features**
+
+![Add Roles and Features](images/add%20roles%20and%20features.png)
+
+I selected **Role-based or feature-based installation**.
+
+![Installation Type](images/role-based%20or%20feature-based.png)
+
+Next, I selected the local Windows Server.
+
+![Select Destination Server](images/select%20destination%20server.png)
+
+Under Server Roles, I selected **Active Directory Domain Services**.
+
+![Select Server Roles](images/Select%20server%20roles.png)
+
+![Active Directory Domain Services](images/active%20directory%20domain%20services%20selected.png)
+
+After installing the role, I proceeded to promote the server to a Domain Controller.
+
+## Step 2: Promote the Server
+
+In Server Manager, I selected the notification flag and clicked:
+
+**Promote this server to a domain controller**
+
+![AD DS Post Deployment](images/AD-post-deployment%20configuration.png)
+
+Because this was a completely new domain environment, I selected **Add a new forest**.
+
+The domain name was:
+
+```text
+adlab.local
+```
+
+![Create New Forest](images/Add%20a%20new%20forest.png)
+
+I then configured the Directory Services Restore Mode password.
+
+![Domain Controller Password](images/Forest%20password%20set.png)
+
+### Active Directory Database
+
+During the installation, the configuration wizard displayed the Active Directory database paths.
+
+![Active Directory Database Paths](images/AD%20paths.png)
+
+One important file associated with Active Directory is:
+
+```text
+NTDS.dit
+```
+
+This database contains sensitive Active Directory information, including account-related data and password hashes.
+
+Unauthorized attempts to access or extract this database can represent a serious security concern.
+
+From a SOC perspective, suspicious access to Active Directory database files should be investigated carefully.
+
+## Step 3: Complete Installation
+
+After reviewing the installation configuration, I completed the prerequisite checks.
+
+![Prerequisite Checks](images/Prerequisites%20check.png)
+
+Once all prerequisite checks passed, I selected Install.
+
+![Active Directory Installation Complete](images/Active%20directory%20installation%20complete.png)
+
+The server restarted automatically after promotion.
+
+Upon signing in, the account was associated with the newly created Active Directory domain.
+
+![Domain Administrator Login](images/ADLAB-Administrator%20logon.png)
+
+Active Directory Domain Services was now configured successfully.
+
+---
+
+# Creating Organizational Units and Users
+
+After configuring Active Directory, I created Organizational Units and domain users.
+
+Organizational Units (OUs) help administrators organize Active Directory objects based on departments, organizational structure, or administrative requirements.
+
+## Step 1: Open Active Directory Users and Computers
+
+From Server Manager, I selected:
+
+**Tools → Active Directory Users and Computers**
+
+![Active Directory Users and Computers](images/AD%20Users%20and%20computers.png)
+
+I reviewed the built-in Active Directory groups and their membership settings.
+
+![Built-in Active Directory Groups](images/User%20and%20computers%20Builtins%20Groups.png)
+
+## Step 2: Create Organizational Units
+
+To simulate an organization, I created departmental Organizational Units.
+
+For example:
+
+```text
+adlab.local
+|
++--- IT
+|
++--- HR
+```
+
+I created the IT Organizational Unit by right-clicking the domain and selecting:
+
+**New → Organizational Unit**
+
+![IT Organizational Unit](images/IT%20OU%20Creation.png)
+
+## Step 3: Create Domain Users
+
+Inside the IT Organizational Unit, I created a domain user.
+
+To create a user:
+
+1. Right-click the Organizational Unit.
+2. Select **New → User**.
+3. Enter the user's name and account information.
+4. Configure the account password.
+5. Review the account settings.
+6. Finish the user creation wizard.
+
+![Create Active Directory User](images/User%20Creation.png)
+
+I configured a test password for the account.
+
+![User Password Configuration](images/User%20Password%20set.png)
+
+In this controlled environment, I disabled the requirement to change the password at the next logon for a selected test account.
+
+In production environments, appropriate password policies and account lifecycle controls should be enforced.
+
+## Step 4: Verify Users and Groups
+
+After creating the users, I verified they appeared under the correct Organizational Units.
+
+![User Group Verification](images/User%20group%20verify.png)
+
+![Additional User Verification](images/User%20group%20verify2.png)
+
+This exercise helped me understand how Active Directory manages users and groups and how OU structures can support administration.
+
+---
+
+# Joining Windows 10 to Active Directory
+
+After configuring the Domain Controller and creating users, I joined the Windows 10 workstation to the domain.
+
+The domain name was:
+
+```text
+adlab.local
+```
+
+## Step 1: Open Windows System Properties
+
+On Windows 10, I opened:
+
+**This PC → Properties → Advanced System Settings**
+
+![Windows 10 System Properties](images/W10%20System%20properties.png)
+
+Under the Computer Name tab, I selected Change.
+
+## Step 2: Join the Domain
+
+I selected the Domain option and entered:
+
+```text
+adlab.local
+```
+
+![Join Windows 10 to Domain](images/W10%20join%20domain.png)
+
+Initially, Windows could not locate the domain.
+
+![Domain Join Error](images/Join%20domain%20error.png)
+
+### Why Did the Domain Join Fail?
+
+The workstation's DNS configuration was not pointing to the Active Directory DNS server.
+
+Active Directory relies heavily on DNS records to locate Domain Controllers and authentication services.
+
+To correct this, I changed the Windows 10 preferred DNS server to:
+
+```text
+192.168.10.7
+```
+
+![Configure Domain Controller DNS](images/Add%20DNS%20server%20as%20Windows%20Server%20ip.png)
+
+## Step 3: Verify DNS Settings
+
+I opened PowerShell and ran:
+
+```powershell
+ipconfig /all
+```
+
+![Verify Windows IP Configuration](images/ipconfig%20all.png)
+
+After confirming the DNS server, I attempted the domain join again.
+
+This time Windows requested authorized domain credentials.
+
+![Domain Join Credentials](images/Credentials%20for%20Domain%20change.png)
+
+After authenticating, Windows successfully joined `adlab.local`.
+
+![Domain Joined Successfully](images/Domain%20joined.png)
+
+The machine was restarted to apply the domain configuration.
+
+### What I Learned
+
+This exercise demonstrated that network connectivity alone does not guarantee Active Directory connectivity.
+
+Even if two machines can ping each other, domain joining can fail when DNS is configured incorrectly.
+
+After updating the preferred DNS server to the Domain Controller, the domain join succeeded.
+
+---
+
+# Configuring Kali Linux for Security Testing
+
+With Active Directory and Splunk monitoring configured, I prepared Kali Linux for controlled authentication testing.
+
+## Step 1: Configure Kali's Static IP
+
+On Kali Linux, I opened the Advanced Network Configuration interface.
+
+![Kali Network Settings](images/kali%20linux%20network.png)
+
+I selected Wired Connection 1 and opened its settings.
+
+![Kali Wired Connection](images/kali%20linux%20network%20connection.png)
+
+Under IPv4 Settings, I changed the method to Manual.
+
+The final lab settings were:
 
 ```text
 IP Address: 192.168.10.250
-Prefix: /24
+Subnet Mask: 255.255.255.0
 Gateway: 192.168.10.2
-DNS: 192.168.10.7
+DNS Server: 192.168.10.7
 ```
 
-During initial configuration, a public DNS resolver was used for internet testing. The Domain Controller's DNS address was later used for Active Directory name resolution.
+![Kali Static IP Configuration](images/kali%20linux%20network%20configuration.png)
 
-## 11.1 Configure the Kali Network
+## Step 2: Verify the IP Address
 
-Open the network settings and navigate to:
-
-```text
-Advanced Network Configuration
-    |
-Wired Connection 1
-    |
-IPv4 Settings
-    |
-Method: Manual
-```
-
-Enter the network information and save.
-
-## 11.2 Verify Connectivity
+I opened a terminal and ran:
 
 ```bash
 ip a
 ```
 
-```bash
-ip route
-```
+Initially, the configured IP address was not reflected in the active interface.
 
-Test Splunk connectivity:
+![Kali IP Before Reconnection](images/kali%20linux%20ip%20a1.png)
+
+I disconnected and reconnected the network interface to apply the new configuration.
+
+Afterward, the address was correct.
+
+![Kali Static IP Verified](images/kali%20linux%20ip%20a2.png)
+
+## Step 3: Test Connectivity
+
+I tested communication with the Splunk Server:
 
 ```bash
 ping -c 4 192.168.10.10
 ```
 
-Test Windows 10 connectivity:
+I also tested the Windows 10 workstation:
 
 ```bash
 ping -c 4 192.168.10.100
 ```
 
-Test Domain Controller connectivity:
+![Kali Network Connectivity](images/kali%20linux%20ping.png)
 
-```bash
-ping -c 4 192.168.10.7
-```
-
-## 11.3 Troubleshooting ICMP
-
-I initially encountered a situation where Windows 10 could ping Kali, but Kali could not ping Windows 10.
-
-The issue involved Windows Firewall's inbound ICMP rules.
-
-I kept Windows Firewall enabled and allowed ICMP requests from the Kali lab IP address.
-
-This helped demonstrate that successful communication in one direction does not necessarily mean the opposite direction is allowed.
-
-I also verified RDP separately because ICMP connectivity and TCP port connectivity are different.
-
-### Kali Network Screenshots
-
-![Kali Linux IP](assets/screenshots/kali-network/05-kali-linux-ip-a2.png)
-
-<details>
-<summary><strong>View additional Kali network screenshots</strong></summary>
-
-![Kali Network](assets/screenshots/kali-network/01-kali-linux-network.png)
-
-![Kali Connection](assets/screenshots/kali-network/02-kali-linux-network-connection.png)
-
-![Kali Static IP](assets/screenshots/kali-network/03-kali-linux-network-configuration.png)
-
-![Kali IP Verification](assets/screenshots/kali-network/04-kali-linux-ip-a1.png)
-
-![Kali Ping](assets/screenshots/kali-network/06-kali-linux-ping.png)
-
-</details>
+Once connectivity was verified, I proceeded with the authorized authentication testing exercise.
 
 ---
 
-# 12. RDP Authentication Testing with NetExec
+# RDP Authentication Testing Using NetExec
 
-After confirming network connectivity and log forwarding, I performed controlled RDP authentication testing against the Windows 10 target machine.
+One of the main security exercises in this project involved generating authentication activity against a domain-joined Windows 10 workstation.
 
-This exercise was intended to generate authentication events that could be monitored and investigated in Splunk.
+The goal was to simulate repeated failed password attempts and observe how Windows and Active Directory recorded the authentication events.
 
-## 12.1 Enable Remote Desktop
+These events were then investigated using Splunk Enterprise.
 
-On Windows 10:
+## Step 1: Enable Remote Desktop on Windows 10
 
-1. Open System Properties.
-2. Select the Remote tab.
-3. Enable Remote Desktop.
-4. Keep Network Level Authentication enabled.
-5. Select authorized users.
-6. Add the designated test domain account.
+Before running the authentication test, I enabled Remote Desktop on the Windows 10 target.
 
-The Windows 10 target was configured to accept the lab's authorized domain user for Remote Desktop testing.
+I opened:
 
-## 12.2 Verify RDP Connectivity
+**System Properties → Remote**
 
-From Kali Linux:
+Then selected:
+
+**Allow remote connections to this computer**
+
+I kept Network Level Authentication enabled.
+
+![Enable Remote Desktop](images/allow%20remote%20connection.png)
+
+Next, I selected the authorized domain user who would be allowed to access the system through RDP.
+
+![Configure Remote Desktop Users](images/add%20users%20in%20remote%20connection.png)
+
+## Step 2: Verify the RDP Service
+
+From Kali Linux, I verified that Remote Desktop was accessible.
 
 ```bash
 nmap -Pn -p 3389 192.168.10.100
 ```
 
-The scan showed that TCP port 3389 was open.
+The result confirmed:
 
-This confirmed that the RDP service was reachable from Kali Linux.
+```text
+3389/tcp open
+```
 
-An open port alone does not establish that authentication will succeed.
+Port 3389 is commonly used by Remote Desktop Protocol.
 
-## 12.3 Why NetExec Was Used
+The open port confirmed that the service was reachable from Kali Linux.
 
-The project initially followed a tutorial that demonstrated RDP authentication testing using Crowbar.
+## Step 3: Install NetExec
 
-However, the Kali Linux 2026.2 environment included FreeRDP 3, while Crowbar's older integration expected different command-line behavior.
+I originally experimented with Crowbar, but encountered compatibility problems between Crowbar and FreeRDP 3 on Kali Linux 2026.2.
 
-This caused parsing problems and false-positive authentication results.
+Instead of replacing the Kali operating system, I switched to NetExec, which successfully distinguished accepted and rejected credentials in my environment.
 
-After troubleshooting, I selected NetExec as an alternative because it correctly distinguished rejected credentials from accepted credentials in the current lab environment.
+NetExec is an open-source network security assessment tool that supports multiple authentication protocols.
 
-## 12.4 Installing NetExec
+Official documentation:
 
-On Kali Linux:
+https://www.netexec.wiki/
+
+I installed it with:
 
 ```bash
 sudo apt update
 sudo apt install netexec -y
 ```
 
-Verify:
+![NetExec Installation](images/kali%20linux%20apt%20update%20and%20install%20netexec.png)
+
+I verified the installed version:
 
 ```bash
 nxc --version
 ```
 
-The lab used NetExec version 1.5.1.
+![NetExec Version](images/netexec%20version.png)
 
-## 12.5 Preparing the Controlled Test
+I also reviewed the available options:
 
-I used a small lab password list and a disposable Active Directory account.
+```bash
+nxc --help
+```
 
-The purpose was to test the detection pipeline without performing large-scale password testing or affecting production systems.
+![NetExec Help](images/netexec%20help.png)
 
-The wordlist was stored locally in the Kali project directory and excluded from the published repository.
+## Step 4: Prepare the Test Environment
 
-Before testing, I verified the target address, account permissions, RDP availability, and account-lockout considerations.
+I created a project directory on Kali Linux:
 
-## 12.6 Running the Authentication Test
+```bash
+mkdir -p ~/Desktop/ad-project
+cd ~/Desktop/ad-project
+```
 
-The command used in the documented lab was:
+I used a small password list for the controlled exercise.
+
+Kali Linux includes the RockYou wordlist under `/usr/share/wordlists`.
+
+The lab documentation shows extracting the wordlist and selecting a small number of entries.
+
+![Wordlist Extraction](images/unzip%20the%20password%20file.png)
+
+I used a limited set of entries rather than performing a large-scale test.
+
+For example:
+
+```bash
+head -n 20 rockyou.txt
+```
+
+![Preview Wordlist](images/Get%20first%2020%20password.png)
+
+The selected entries were stored in `passwords.txt`.
+
+The test used a disposable Active Directory account created specifically for this lab.
+
+### Security Considerations
+
+The password list was used only against the authorized Windows 10 virtual machine.
+
+Repeated incorrect passwords can lock Active Directory accounts, so authentication testing should be planned with appropriate account-lockout policies and test boundaries.
+
+<details>
+<summary><strong>Additional password-file preparation</strong></summary>
+
+![Password File Permissions](images/password%20file%20permissions.png)
+
+<!--
+The screenshot below is intentionally disabled because it may display
+the contents of the lab password list. Review and redact it before publishing.
+
+![Password File Contents](images/new%20file%20read.png)
+-->
+
+</details>
+
+## Step 5: Perform Controlled RDP Authentication Testing
+
+The documented test used the following NetExec command:
 
 ```bash
 nxc -t 1 --jitter 3 rdp 192.168.10.100 -d ADLAB -u tsmith -p passwords.txt
@@ -1568,105 +1440,91 @@ nxc -t 1 --jitter 3 rdp 192.168.10.100 -d ADLAB -u tsmith -p passwords.txt
 
 ### Command Explanation
 
-| Parameter | Purpose |
+| Parameter | Description |
 |---|---|
-| `nxc` | Execute NetExec |
-| `-t 1` | Use one concurrent worker |
-| `--jitter 3` | Add spacing between attempts |
-| `rdp` | Use the RDP protocol |
+| `nxc` | Runs NetExec |
+| `-t 1` | Uses one concurrent worker |
+| `--jitter 3` | Adds spacing between attempts |
+| `rdp` | Selects Remote Desktop Protocol |
 | `192.168.10.100` | Windows 10 target |
-| `-d ADLAB` | Specify Active Directory domain |
-| `-u tsmith` | Specify the disposable test account |
-| `-p passwords.txt` | Use the lab password list |
+| `-d ADLAB` | Specifies the domain |
+| `-u tsmith` | Specifies the lab account |
+| `-p passwords.txt` | Uses the test password list |
 
-The command was executed only against the authorized Windows 10 VM.
+The test produced multiple rejected authentication attempts.
 
-## 12.7 Authentication Results
-
-NetExec displayed rejected credentials using:
+NetExec displayed:
 
 ```text
 STATUS_LOGON_FAILURE
 ```
 
-When the deliberately valid test credential was evaluated, NetExec displayed a successful authentication indicator.
+This indicates that Windows rejected the supplied credentials.
 
-The successful result was accompanied by a `Pwn3d!` indicator.
+When the known valid lab credential was tested, NetExec reported successful authentication and displayed an administrative-access indicator.
 
-This indicates that NetExec recognized successful authentication and reported elevated access characteristics for the account. It does not by itself prove that a complete RDP desktop session was opened.
+**The original screenshot contains the lab password. Redact it before enabling this image in a public README.**
 
-### NetExec Authentication Test
+<!--
+![NetExec Authentication Testing](images/netexec%20password%20brute%20force%20attack.png)
+-->
 
-![NetExec Authentication Test](assets/screenshots/authentication-testing/10-netexec-password-brute-force-attack.png)
+## Step 6: Investigate the Events in Splunk
 
-> **Privacy note:** The published screenshot should have the valid test password covered before uploading to a public GitHub repository.
+After running the authentication test, I opened Splunk Search & Reporting.
 
-## 12.8 Security Significance
+The relevant Windows Security events were forwarded to the `endpoint` index.
 
-Repeated failed authentication attempts can indicate:
+The Windows 10 workstation recorded failed logon activity.
+
+![Event ID 4625](images/EventID%204625.png)
+
+The documented investigation showed **60 failed logon events** in one filtered Splunk result.
+
+This count represents the events visible in that particular search, not necessarily the total number of authentication failures produced during the entire project.
+
+I then filtered the events to investigate the test account.
+
+```spl
+index=endpoint source="WinEventLog:Security" EventCode=4625 "tsmith"
+| table _time host _raw
+| sort -_time
+```
+
+![Splunk Investigation After Authentication Test](images/splunk%20query%20after%20attack.png)
+
+The logs provided information about the failed authentication activity, including account information and the originating system.
+
+![Investigate Source Address](images/Splunk%20check%20ip%20of%20the%20attacker.png)
+
+### Why This Matters
+
+A large number of failed logins against the same account within a short period may indicate:
 
 - Password guessing
-- Misconfigured services
+- Unauthorized authentication attempts
+- Misconfigured applications
 - Credential misuse
-- Unauthorized access attempts
-- Account lockout activity
+- Automated login activity
 
-A successful credential validation following multiple failures is an especially useful sequence for SOC analysts to investigate.
-
-However, the events must be correlated before concluding that an account was compromised.
-
-### Authentication Testing Screenshots
-
-<details>
-<summary><strong>View additional authentication testing screenshots</strong></summary>
-
-![NetExec Version](assets/screenshots/authentication-testing/01-netexec-version.png)
-
-![NetExec Installation](assets/screenshots/authentication-testing/02-kali-linux-apt-update-and-install-netexec.png)
-
-![NetExec Help](assets/screenshots/authentication-testing/03-netexec-help.png)
-
-![Password File Permissions](assets/screenshots/authentication-testing/04-password-file-permissions.png)
-
-![Wordlist Preparation](assets/screenshots/authentication-testing/05-unzip-the-password-file.png)
-
-![Small Wordlist](assets/screenshots/authentication-testing/06-get-first-20-password.png)
-
-![Wordlist Verification](assets/screenshots/authentication-testing/07-new-file-read.png)
-
-![Remote Desktop](assets/screenshots/authentication-testing/08-allow-remote-connection.png)
-
-![Remote Desktop Users](assets/screenshots/authentication-testing/09-add-users-in-remote-connection.png)
-
-![Event ID 4625](assets/screenshots/authentication-testing/11-eventid-4625.png)
-
-![Splunk Query After Test](assets/screenshots/authentication-testing/12-splunk-query-after-attack.png)
-
-![Attacker IP Investigation](assets/screenshots/authentication-testing/13-splunk-check-ip-of-the-attacker.png)
-
-</details>
+As a SOC analyst, it is important to investigate the account, source workstation, event timestamps, failure codes, and any successful authentications that occur afterward.
 
 ---
 
-# 13. Investigating Authentication Events in Splunk
+# Investigating Authentication Events in Splunk
 
-After conducting the controlled RDP authentication tests, I used Splunk Enterprise to investigate the resulting Windows security events.
+After the controlled authentication tests, I continued investigating the Windows Security events collected by Splunk.
 
-The Windows 10 workstation and Domain Controller both forwarded logs to the `endpoint` index.
+The two main systems involved were:
 
-## 13.1 Verify Windows Event Sources
+- **ADDC01:** Domain Controller
+- **target-PC:** Windows 10 workstation
 
-```spl
-index=endpoint
-| stats count by host source
-| sort -count
-```
+## Windows Event ID 4625 — Failed Logon
 
-This confirms which hosts are sending data and which event sources are available.
+Event ID 4625 indicates a failed Windows logon attempt.
 
-## 13.2 Investigate Failed Logons
-
-Windows Security Event ID 4625 indicates that an account failed to log on.
+Example SPL:
 
 ```spl
 index=endpoint source="WinEventLog:Security" EventCode=4625
@@ -1674,45 +1532,69 @@ index=endpoint source="WinEventLog:Security" EventCode=4625
 | sort -_time
 ```
 
-### Explanation
+This query displays failed logon events from the monitored Windows systems.
 
-- `index=endpoint` selects the monitoring index.
-- `source="WinEventLog:Security"` limits the search to Windows Security logs.
-- `EventCode=4625` filters for failed logons.
-- `table` displays selected event information.
-- `sort -_time` places the newest events first.
+The raw event data can include:
 
-The saved project evidence includes a Splunk search showing **60 Event ID 4625 occurrences** in a filtered result.
+- Target account
+- Account domain
+- Logon type
+- Source network address
+- Authentication package
+- Failure reason
+- Status and substatus codes
 
-This is the count shown in that captured search, not a claim about the total number of failures throughout the entire project.
+These fields help determine whether an authentication failure came from a user mistake, application issue, or suspicious activity.
 
-## 13.3 Investigate Active Directory Credential Validation
+## Windows Event ID 4624 — Successful Logon
 
-Windows Event ID 4776 records NTLM credential validation activity.
-
-The Domain Controller recorded authentication activity involving the test account and the Kali workstation.
-
-Important error codes:
-
-| Error Code | Meaning |
-|---|---|
-| `0x0` | Successful credential validation |
-| `0xC000006A` | Incorrect password |
-| `0xC0000234` | Account locked out |
-
-### SPL Query
+Event ID 4624 records successful Windows logons.
 
 ```spl
-index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
+index=endpoint source="WinEventLog:Security" EventCode=4624
 | table _time host _raw
 | sort -_time
 ```
 
-This displays the NTLM validation events collected from the Domain Controller.
+It is important to review the logon type because Event ID 4624 can represent different forms of authentication.
 
-## 13.4 Extract Authentication Result Codes
+For example:
 
-To distinguish successful and failed authentication, I used SPL field extraction.
+| Logon Type | Description |
+|---|---|
+| 2 | Interactive logon |
+| 3 | Network logon |
+| 5 | Service logon |
+| 10 | Remote interactive logon |
+| 11 | Cached interactive logon |
+
+Logon Type 10 is particularly relevant when investigating established RDP sessions.
+
+## Windows Event ID 4776 — NTLM Credential Validation
+
+Event ID 4776 records NTLM credential validation.
+
+During the project, the Domain Controller recorded failed and successful NTLM validation requests involving the test account.
+
+The relevant authentication codes included:
+
+| Error Code | Meaning |
+|---|---|
+| `0x0` | Credential validation succeeded |
+| `0xC000006A` | Incorrect password |
+| `0xC0000234` | Account locked out |
+
+I used the following search to investigate these events:
+
+```spl
+index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776 "tsmith"
+| table _time host _raw
+| sort -_time
+```
+
+### Extract Authentication Results
+
+I also used `rex` and `eval` to classify authentication results.
 
 ```spl
 index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776 "tsmith"
@@ -1725,106 +1607,51 @@ index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776 "tsmith"
 | stats count by Result
 ```
 
-### Explanation
+This query categorizes NTLM credential validations based on their error code.
 
-**rex:** Extracts the NTLM error code from the raw event.
+### Important Distinction
 
-**eval:** Creates a readable result category.
+A successful Event ID 4776 indicates that credentials were accepted by NTLM credential validation.
 
-**case:** Uses conditions to classify the event as a success, incorrect password, or other outcome.
+It does not automatically prove that a complete RDP desktop session was established.
 
-**stats:** Counts events in each category.
-
-This helped identify successful and failed NTLM credential validation in Splunk.
-
-## 13.5 Investigating RDP Logons
-
-A successful NTLM validation does not necessarily mean a full RDP desktop session was established.
-
-To investigate Windows remote-interactive logons, I can search for Event ID 4624 with Logon Type 10:
-
-```spl
-index=endpoint host="target-PC" source="WinEventLog:Security" EventCode=4624
-| rex field=_raw "Logon Type:\s+(?<LogonType>\d+)"
-| where LogonType="10"
-| table _time host LogonType _raw
-| sort -_time
-```
-
-This helps distinguish complete remote-interactive logons from credential validation alone.
-
-## 13.6 Investigating Sysmon Events
-
-One important issue I discovered was that some Sysmon XML events did not expose `EventCode` as a normal extracted field.
-
-An initial search using:
-
-```spl
-index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
-| stats count by host EventCode
-```
-
-did not produce the expected statistics table.
-
-The events were present, but the field extraction was different.
-
-To solve this, I extracted the event identifier directly from the XML.
-
-```spl
-index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
-| rex field=_raw "<EventID[^>]*>(?<SysmonEventID>\d+)</EventID>"
-| stats count by host SysmonEventID
-| sort -count
-```
-
-This successfully displayed the different Sysmon Event IDs collected from both Windows machines.
-
-The output included:
-
-- Process creation
-- Network connections
-- Image loading
-- File creation
-- Registry modifications
-- DNS queries
-
-### Why This Matters
-
-A log being successfully received does not automatically mean every field has been extracted correctly.
-
-SOC analysts must understand the underlying data format and adapt their searches accordingly.
+To confirm an actual remote-interactive logon, additional events such as Event ID 4624 with Logon Type 10 should be investigated.
 
 ---
 
-# 14. Atomic Red Team Attack Simulation
+# Testing with Atomic Red Team
 
-After completing the authentication monitoring exercises, I used Atomic Red Team to simulate additional security-relevant activity on the Windows 10 target.
+After completing the authentication monitoring exercise, I used Atomic Red Team to generate additional endpoint security telemetry.
 
-Atomic Red Team provides individual security tests based on techniques from the MITRE ATT&CK framework.
+Atomic Red Team is an open-source project maintained by Red Canary.
 
-These tests allow security professionals to evaluate whether endpoint monitoring tools record behavior associated with known adversary techniques.
+It contains individual tests mapped to techniques from the MITRE ATT&CK framework.
 
-## 14.1 Why Atomic Red Team?
+These tests can help defenders understand how certain attacker behaviors appear in endpoint logs.
 
-Atomic Red Team was included to:
+**Repository:** https://github.com/redcanaryco/atomic-red-team
 
-- Generate known security-relevant activities.
-- Practice recognizing MITRE ATT&CK techniques.
-- Validate Windows and Sysmon logging.
-- Investigate process and registry telemetry.
-- Learn how offensive simulations support defensive investigations.
+## Step 1: Prepare the Windows 10 Target
 
-The tests were executed on the disposable Windows 10 VM.
+Atomic Red Team was configured on the Windows 10 target machine.
 
-## 14.2 Installing Atomic Red Team
+I opened PowerShell as Administrator and prepared the environment for installing the Invoke-AtomicRedTeam framework.
 
-The project used Red Canary's Invoke-AtomicRedTeam framework.
+The original lab documentation included a relaxed PowerShell execution policy and a broad Microsoft Defender exclusion during initial experimentation.
 
-Repository:
+These settings weaken Windows protection and should not be treated as recommended deployment steps.
 
-https://github.com/redcanaryco/invoke-atomicredteam
+A safer approach is to review the selected tests, keep Defender enabled, and use a disposable VM snapshot.
 
-The documented installation procedure included:
+![PowerShell Execution Policy](images/Set-Exectution%20Policy.png)
+
+## Step 2: Install Atomic Red Team
+
+The project used the Invoke-AtomicRedTeam PowerShell framework.
+
+**Repository:** https://github.com/redcanaryco/invoke-atomicredteam
+
+The documented installer command was:
 
 ```powershell
 IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing)
@@ -1836,116 +1663,128 @@ Then:
 Install-AtomicRedTeam -getAtomics
 ```
 
-Scripts retrieved from the internet should be reviewed before execution, and tests should be run only in an authorized disposable environment.
+Remote installation scripts should be reviewed before execution.
 
-The original lab notes also include an experimental Microsoft Defender whole-drive exclusion screenshot. That weakens endpoint protection and is not recommended as a normal procedure. Security controls should remain enabled wherever possible.
+![Install Atomic Red Team](images/install%20Atomic%20Red%20Team.png)
 
-## 14.3 MITRE ATT&CK Technique T1136.001
+After installation, I examined the Atomic Red Team directory.
 
-**Technique:** Create Account — Local Account
+![Atomic Red Team Directory](images/Atomic%20Red%20Team%20folder.png)
 
-MITRE ATT&CK ID:
+The directory contained tests organized by MITRE ATT&CK technique identifiers.
+
+![Atomic Test Files](images/Atomic%20Red%20Team%20folder%20run.png)
+
+## Step 3: Explore MITRE ATT&CK
+
+MITRE ATT&CK is a knowledge base documenting tactics and techniques associated with adversary behavior.
+
+Atomic Red Team maps individual tests to ATT&CK technique identifiers.
+
+![MITRE ATTACK Framework](images/MITRE%20ATT%26CK.png)
+
+For example:
 
 ```text
-T1136.001
+T1136.001 - Create Account: Local Account
+T1059.001 - Command and Scripting Interpreter: PowerShell
 ```
 
-This technique involves the creation of local user accounts.
+![MITRE Techniques](images/Testing%20differnt%20techniques%20ID.png)
 
-Attackers can abuse account creation to maintain access or establish persistence.
+## Step 4: Test T1136.001 — Local Account Creation
 
-The documented lab command was:
+The first documented technique was:
+
+**T1136.001 — Create Account: Local Account**
+
+Attackers can abuse account creation to establish persistence or maintain unauthorized access.
+
+The test was executed using:
 
 ```powershell
 Invoke-AtomicTest T1136.001
 ```
 
-After performing the selected test, I searched for related activity in Splunk.
+After running the selected test, I opened Splunk Enterprise and searched for related activity.
 
 ```spl
 index=endpoint "NewLocalUser"
 ```
 
-The documented Splunk search returned **14 raw events** associated with the activity.
+The documented search returned **14 raw events** associated with the activity.
 
-This demonstrated that the monitoring pipeline captured activity related to the Atomic Red Team test.
+This confirmed that the monitoring environment was collecting relevant telemetry during the exercise.
 
-A full investigation would examine the account name, executing process, user context, timestamps, and other event information.
+![Splunk Atomic Red Team Investigation](images/splunk%20check%20after%20Atomic%20Red%20Team%20run.png)
 
-## 14.4 MITRE ATT&CK Technique T1059.001
+## Step 5: Test T1059.001 — PowerShell
 
-**Technique:** Command and Scripting Interpreter — PowerShell
+The next documented technique was:
 
-MITRE ATT&CK ID:
+**T1059.001 — Command and Scripting Interpreter: PowerShell**
 
-```text
-T1059.001
-```
+PowerShell is a legitimate administrative tool, but it can also be misused to execute suspicious commands and scripts.
 
-PowerShell is a legitimate Windows administration tool, but it is also used by attackers to execute commands and scripts.
-
-The documented lab command was:
+The Atomic Red Team test was executed using:
 
 ```powershell
 Invoke-AtomicTest T1059.001
 ```
 
-After the test, I investigated the relevant events in Splunk.
+I then searched Splunk for PowerShell-related telemetry.
 
-The recorded results included Sysmon registry-related telemetry referencing the Background Activity Moderator (BAM) UserSettings path.
-
-This observation demonstrates available endpoint telemetry after test execution. It does not mean every registry modification is malicious or that the observed BAM activity independently proves persistence.
-
-## 14.5 Atomic Red Team Cleanup
-
-Before running additional Atomic tests, I recommend reviewing the details and cleanup actions.
-
-Example:
-
-```powershell
-Invoke-AtomicTest T1136.001 -ShowDetails
+```spl
+index=endpoint powershell
 ```
 
-```powershell
-Invoke-AtomicTest T1059.001 -ShowDetails
+The investigation identified endpoint activity involving `powershell.exe` and registry-related telemetry.
+
+One event referenced:
+
+```text
+HKLM\System\CurrentControlSet\Services\bam\State\UserSettings
 ```
 
-After the selected tests, cleanup should be performed when supported, or the virtual machine should be restored to a known-good snapshot.
+BAM stands for Background Activity Moderator.
 
-### Atomic Red Team Evidence
+Windows uses BAM to track certain application activity.
 
-![Atomic Red Team Splunk Investigation](assets/screenshots/atomic-red-team/08-splunk-check-after-atomic-red-team-run.png)
+The observed registry-related event showed that Sysmon was collecting additional endpoint information during the test.
 
-<details>
-<summary><strong>View additional Atomic Red Team screenshots</strong></summary>
+However, a BAM registry event alone does not establish that malicious activity occurred. The process context and surrounding events must also be considered.
 
-![Execution Policy](assets/screenshots/atomic-red-team/01-set-exectution-policy.png)
+![PowerShell Atomic Red Team Investigation](images/Splunk%20check%20after%20running%20Powershell%20Atomic%20Red%20team.png)
 
-![Experimental Defender Configuration](assets/screenshots/atomic-red-team/02-executions-add-c-drive.png)
+### Why Atomic Red Team Was Useful
 
-![Atomic Installation](assets/screenshots/atomic-red-team/03-install-atomic-red-team.png)
+Atomic Red Team helped me understand how known adversary techniques can be represented by security events.
 
-![Atomic Directory](assets/screenshots/atomic-red-team/04-atomic-red-team-folder.png)
+By generating controlled activity and then investigating it using Splunk, I was able to connect offensive testing with defensive monitoring.
 
-![Atomic Test Execution](assets/screenshots/atomic-red-team/05-atomic-red-team-folder-run.png)
+This approach is commonly associated with purple teaming, where attack simulations are used to improve detection and response capabilities.
 
-![MITRE ATTACK](assets/screenshots/atomic-red-team/06-mitre-att-ck.png)
+### Historical Security Configuration
 
-![ATTACK Techniques](assets/screenshots/atomic-red-team/07-testing-differnt-techniques-id.png)
+The original project screenshots also included a broad Microsoft Defender exclusion.
 
-![PowerShell Atomic Investigation](assets/screenshots/atomic-red-team/09-splunk-check-after-running-powershell-atomic-red-team.png)
+That configuration should not be reproduced as a normal security practice. The screenshot is intentionally excluded from public rendering because it could encourage weakening endpoint protection without sufficient justification.
 
-</details>
+<!--
+Historical lab screenshot — included in the image archive but not displayed:
+
+![Experimental Defender Exclusion](images/Executions%20add%20C%20drive.png)
+-->
 
 ---
 
-# 15. Splunk Detection Queries
+# Splunk Detection Queries
 
-The following SPL queries demonstrate how the collected Windows and Sysmon events can be used for security monitoring and threat hunting.
+The following SPL searches demonstrate how the collected events can be used for additional SOC monitoring and detection engineering.
 
-These are investigation and detection-engineering examples based on the data sources configured in the lab. They should not all be interpreted as saved production alerts.
+These are reusable investigation examples. They are not all claims of scheduled alerts that were deployed during the original lab.
 
-## Detection 1: Count Failed Windows Logons
+## 1. Count Failed Windows Logons
 
 ```spl
 index=endpoint source="WinEventLog:Security" EventCode=4625
@@ -1953,11 +1792,11 @@ index=endpoint source="WinEventLog:Security" EventCode=4625
 | sort -FailedLogons
 ```
 
-**Purpose:** Identify Windows hosts recording failed login activity.
+This query counts failed Windows logon events by host.
 
-This helps SOC analysts locate systems experiencing unusual authentication failures.
+It can help identify machines experiencing high volumes of authentication failures.
 
-## Detection 2: Monitor NTLM Incorrect Passwords
+## 2. Investigate Failed NTLM Authentication
 
 ```spl
 index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
@@ -1969,9 +1808,9 @@ index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
 | sort -FailedAttempts
 ```
 
-**Purpose:** Identify user accounts and workstations associated with rejected NTLM credentials.
+This query identifies accounts and source workstations generating incorrect-password validation events.
 
-## Detection 3: Failed Authentication Followed by Success
+## 3. Detect Multiple Failures Followed by Success
 
 ```spl
 index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
@@ -1990,27 +1829,24 @@ index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
 | sort -_time
 ```
 
-**Purpose:** Identify successful NTLM credential validation preceded by repeated incorrect-password attempts from the same account and workstation within a 10-minute window.
+This detection looks for successful NTLM credential validation preceded by five or more incorrect-password attempts from the same account and workstation within ten minutes.
 
-This pattern can be consistent with password guessing followed by successful authentication.
+The pattern is consistent with possible password guessing followed by a successful credential validation.
 
-The query provides a lead for investigation, not definitive proof of compromise.
+It should be treated as an investigation lead rather than definitive evidence of a compromised account.
 
-## Detection 4: Sysmon Process Creation
+## 4. Search for Sysmon Events
 
 ```spl
-index=endpoint host="target-PC" source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
-| rex field=_raw "<EventID[^>]*>(?<SysmonEventID>\d+)</EventID>"
-| where SysmonEventID="1"
-| table _time host _raw
-| sort -_time
+index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
+| stats count by host
 ```
 
-**Purpose:** Investigate process creation events captured by Sysmon.
+This confirms that Sysmon telemetry is arriving from the monitored Windows systems.
 
-This is useful for reviewing executed commands, parent processes, and process relationships.
+## 5. Extract Sysmon Event IDs
 
-## Detection 5: Sysmon Event Distribution
+Because Sysmon data was collected in XML format, I used field extraction to identify Event IDs.
 
 ```spl
 index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
@@ -2019,24 +1855,23 @@ index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
 | sort -count
 ```
 
-**Purpose:** Identify which Sysmon event types generate the most telemetry.
+This allows the event data to be grouped by Sysmon Event ID.
 
-This can help tune event filtering and evaluate storage requirements.
-
-## Detection 6: Windows Authentication Timeline
+## 6. Investigate Process Creation
 
 ```spl
-index=endpoint source="WinEventLog:Security"
-(EventCode=4624 OR EventCode=4625 OR EventCode=4771 OR EventCode=4776 OR EventCode=4740)
-| table _time host EventCode _raw
+index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
+| rex field=_raw "<EventID[^>]*>(?<SysmonEventID>\d+)</EventID>"
+| where SysmonEventID="1"
+| table _time host _raw
 | sort -_time
 ```
 
-**Purpose:** Review successful logons, failed logons, Kerberos authentication failures, NTLM credential validation, and account lockouts across monitored systems.
+Sysmon Event ID 1 records process creation.
 
-This helps build an investigation timeline.
+SOC analysts can use these events to investigate suspicious programs, command-line activity, and process relationships.
 
-## Detection 7: Specific Account Investigation
+## 7. Investigate an Active Directory Account
 
 ```spl
 index=endpoint source="WinEventLog:Security" "tsmith"
@@ -2044,9 +1879,9 @@ index=endpoint source="WinEventLog:Security" "tsmith"
 | sort -_time
 ```
 
-**Purpose:** Investigate authentication activity associated with an individual lab account.
+This displays Windows Security events associated with the lab account.
 
-## Detection 8: Review Splunk Data Sources
+## 8. Verify Log Collection
 
 ```spl
 index=endpoint
@@ -2054,241 +1889,251 @@ index=endpoint
 | sort -count
 ```
 
-**Purpose:** Verify that the monitoring pipeline continues receiving data from both Windows machines.
+This provides an overview of the hosts and event sources sending telemetry to Splunk.
 
 ---
 
-# 16. Challenges and Troubleshooting
+# Challenges and Troubleshooting
 
-Throughout the project, I encountered several technical issues that required troubleshooting.
+Throughout this project, I encountered several issues that required troubleshooting.
 
-These problems provided practical opportunities to improve my understanding of system administration, networking, Windows authentication, and SIEM configuration.
+These challenges were valuable because they helped me better understand how virtualization, networking, Windows authentication, and SIEM systems work together.
 
-## 16.1 VMware NAT Gateway Conflict
+### 1. VMware NAT Gateway Misconfiguration
 
-**Problem:** Ubuntu could not communicate with external networks.
+**Problem:** Ubuntu initially could not communicate with external networks.
 
-**Cause:** The VMware host adapter and NAT gateway were both configured to use `192.168.10.1`.
+**Cause:** The VMware NAT gateway was incorrectly configured using the host adapter address.
 
-**Solution:** Changed the NAT gateway to `192.168.10.2` and updated Ubuntu's default route.
+**Solution:** I corrected the gateway to `192.168.10.2` and updated the Ubuntu default route.
 
-**Lesson:** Each network interface and gateway must have a unique, valid IP address.
+**Lesson Learned:** Proper IP addressing and routing are essential for network communication.
 
-## 16.2 Splunk Storage Issue
+### 2. Insufficient Storage During Splunk Installation
 
-**Problem:** Splunk installation failed with a no-space-left error.
+**Problem:** Splunk installation failed because Ubuntu ran out of disk space.
 
-**Cause:** Ubuntu's root filesystem had insufficient available capacity.
+**Cause:** The Ubuntu root filesystem did not have enough storage available.
 
-**Solution:** Expanded the VMware virtual disk and extended Ubuntu's partition and LVM filesystem.
+**Solution:** I expanded the VMware virtual disk and then extended the Ubuntu LVM filesystem.
 
-**Lesson:** Increasing virtual disk capacity does not automatically expand guest partitions.
+**Lesson Learned:** Expanding a virtual disk and expanding the guest filesystem are separate operations.
 
-## 16.3 Active Directory Domain Join Failure
+### 3. Active Directory Domain Join Failure
 
-**Problem:** Windows 10 could not join the domain.
+**Problem:** Windows 10 was unable to join the `adlab.local` domain.
 
-**Cause:** The workstation was not using the Domain Controller for DNS resolution.
+**Cause:** The workstation's DNS server was not configured to use the Domain Controller.
 
-**Solution:** Configured `192.168.10.7` as the preferred DNS server.
+**Solution:** I changed the preferred DNS server to `192.168.10.7`.
 
-**Lesson:** Active Directory depends on correct DNS configuration.
+**Lesson Learned:** Active Directory relies on DNS to locate domain services.
 
-## 16.4 Kali Cannot Ping Windows 10
+### 4. Kali Linux Could Not Ping Windows 10
 
-**Problem:** Windows 10 could ping Kali, but Kali could not ping Windows 10.
+**Problem:** Kali Linux could not ping Windows 10, even though Windows 10 could ping Kali.
 
-**Cause:** Inbound ICMP requests were not permitted by the Windows Firewall configuration.
+**Cause:** Windows Firewall was restricting incoming ICMP traffic.
 
-**Solution:** Allowed the authorized Kali host to send ICMP requests without disabling Windows Firewall.
+**Solution:** I configured a firewall rule allowing ICMP requests from the authorized Kali IP address.
 
-**Lesson:** Firewall policies can allow outbound traffic while restricting inbound traffic.
+**Lesson Learned:** Firewall rules can permit outbound traffic while restricting inbound traffic.
 
-## 16.5 Splunk Searches Returned No Events
+### 5. Splunk Searches Returned No Results
 
-**Problem:** Initial searches using `index=main` returned no expected Windows authentication events.
+**Problem:** Initial SPL searches returned no expected Windows authentication events.
 
-**Cause:** The Windows logs were stored in the dedicated `endpoint` index.
+**Cause:** The events were stored in the `endpoint` index rather than the default `main` index.
 
-**Solution:** Updated searches to use:
+**Solution:** I updated my SPL searches to use:
 
 ```spl
 index=endpoint
 ```
 
-**Lesson:** SOC analysts must understand the actual index and source configuration before writing detection queries.
+**Lesson Learned:** Analysts must understand their data sources and index configurations before investigating events.
 
-## 16.6 Sysmon Field Extraction
+### 6. Sysmon Event ID Extraction
 
-**Problem:** Sysmon events appeared in Splunk, but grouping by `EventCode` returned no statistics.
+**Problem:** Sysmon events were arriving in Splunk, but the `EventCode` field was not available in the expected format.
 
-**Cause:** The events were ingested in XML format and required additional event ID extraction.
+**Cause:** The Sysmon data was ingested in XML format.
 
-**Solution:** Used SPL `rex` to extract `<EventID>` from `_raw`.
+**Solution:** I used the `rex` command to extract the Event ID from the raw XML event.
 
-**Lesson:** Event collection and field extraction are separate stages of the log-processing pipeline.
+**Lesson Learned:** Field extraction is an important part of understanding and investigating log data.
 
-## 16.7 Crowbar and FreeRDP Compatibility
+### 7. Crowbar and FreeRDP Compatibility
 
-**Problem:** Crowbar generated command-line errors and later reported false authentication successes.
+**Problem:** Crowbar generated errors and reported incorrect authentication successes.
 
-**Cause:** Crowbar's older FreeRDP integration was incompatible with the newer FreeRDP version installed on Kali Linux 2026.2.
+**Cause:** Crowbar's older FreeRDP integration was incompatible with the version included in Kali Linux 2026.2.
 
-**Solution:** Switched to NetExec for controlled authentication testing.
+**Solution:** I switched to NetExec, which accurately identified accepted and rejected credentials in this lab.
 
-**Lesson:** Security testing tools can become unreliable when their dependencies change. Their results should be verified independently against system logs.
+**Lesson Learned:** Security testing tools can behave differently across software versions, and their results should be verified using endpoint logs.
 
-## 16.8 Kali Linux Mouse Cursor Issue
+### 8. Kali Linux Mouse Cursor Issue
 
-**Problem:** The cursor was invisible inside the Kali VM, even though mouse clicking still worked.
+**Problem:** The mouse cursor disappeared inside the Kali Linux virtual machine, even though mouse clicks continued working.
 
-**Cause:** A guest graphics and cursor-rendering issue.
+**Cause:** A VMware guest cursor-rendering issue.
 
-**Solution:** Used an Xorg software cursor configuration to correct rendering.
+**Solution:** I configured Xorg to use software cursor rendering.
 
-**Lesson:** Not every input issue is a hardware problem; virtualization display integration can also affect usability.
+**Lesson Learned:** Virtual machine usability problems may involve graphics rendering rather than input hardware.
 
 ---
 
-# 17. Project Results
+# Project Results
 
-The final environment successfully demonstrated centralized monitoring of Windows and Active Directory activity.
+The project successfully established a working Active Directory environment with centralized security monitoring.
 
-## Confirmed Outcomes
+### Completed Components
 
-| Objective | Result |
+| Component | Result |
 |---|---|
-| Configure VMware virtual network | Completed |
-| Deploy Windows 10 | Completed |
-| Deploy Windows Server 2022 | Completed |
-| Install Ubuntu Splunk Server | Completed |
-| Configure Active Directory | Completed |
-| Create test users and OUs | Completed |
-| Join Windows 10 to the domain | Completed |
-| Install Sysmon | Completed |
-| Configure Splunk Forwarder | Completed |
-| Create endpoint index | Completed |
-| Forward Windows logs | Completed |
-| Receive Sysmon telemetry | Completed |
-| Generate authorized RDP authentication activity | Completed |
-| Investigate failed authentications | Completed |
-| Identify accepted test credentials | Completed |
-| Run selected Atomic Red Team tests | Documented |
-| Investigate security events in Splunk | Completed |
+| VMware virtual machines | Successfully deployed |
+| Custom NAT network | Configured |
+| Windows Server 2022 | Installed |
+| Active Directory Domain Services | Configured |
+| Domain users and OUs | Created |
+| Windows 10 domain join | Successful |
+| Ubuntu Server | Installed |
+| Splunk Enterprise | Running |
+| Splunk Universal Forwarder | Installed on both Windows systems |
+| Sysmon | Installed and configured |
+| Windows Security logs | Forwarding successfully |
+| Sysmon telemetry | Forwarding successfully |
+| Kali Linux network | Configured |
+| NetExec authentication testing | Successful |
+| Authentication event analysis | Completed |
+| Atomic Red Team tests | Executed and investigated |
 
-## Authentication Analysis
+### Security Monitoring Results
 
-The Domain Controller recorded NTLM credential validation events associated with the test account.
+The monitoring environment collected Windows Security and Sysmon telemetry from both Windows machines.
 
-The Windows workstation recorded failed logon events.
+The project documented:
 
-Splunk allowed me to investigate and compare the activity across the monitored systems.
+- Multiple failed Windows logon events.
+- NTLM credential validation failures.
+- Successful NTLM credential validations.
+- Sysmon process creation activity.
+- Registry-related events.
+- File creation activity.
+- Atomic Red Team-generated endpoint events.
 
-The collected events included:
+The saved documentation includes a Splunk search showing 60 failed logon events in one filtered view and a search showing 14 raw events associated with the Atomic Red Team account-creation exercise.
 
-- Windows Security Event ID 4625
-- Windows Security Event ID 4624
-- NTLM credential validation Event ID 4776
-- Sysmon process creation events
-- Sysmon file creation events
-- Sysmon registry activity
+These results demonstrated that the monitoring pipeline was collecting and presenting security-relevant telemetry.
 
-The project demonstrated how endpoint and Domain Controller telemetry can be combined to investigate potentially suspicious activity.
-
-## Atomic Red Team Results
-
-Selected Atomic Red Team tests generated Windows endpoint activity that could be examined using Splunk.
-
-The account-creation test produced events associated with local account management, while the PowerShell-related test provided additional endpoint telemetry.
-
-These observations reinforced the importance of using realistic, controlled simulations to validate monitoring coverage.
+The most important outcome was understanding how activities generated on endpoints can be correlated with security events collected in a centralized SIEM.
 
 ---
 
-# 18. Lessons Learned
+# Lessons Learned
 
-## 1. Networking Is the Foundation of a Functional Lab
+### 1. Understanding Active Directory Infrastructure
 
-Configuring static IP addresses, subnet masks, default gateways, and DNS correctly was essential to establishing communication between the virtual machines.
+This project helped me understand how Active Directory manages users, computers, authentication, and organizational structures.
 
-I learned how VMware NAT works and why a small gateway configuration mistake can prevent connectivity.
+I gained hands-on experience configuring Windows Server as a Domain Controller, creating Organizational Units, managing test accounts, and joining a workstation to the domain.
 
-## 2. Active Directory Relies on Proper DNS Configuration
+### 2. Importance of Network Configuration
 
-During domain joining, I discovered that even when two machines can ping each other, Active Directory may still fail if the workstation cannot resolve the domain through the correct DNS server.
+I learned how IP addressing, subnetting, default gateways, DNS, and VMware NAT networking affect communication between systems.
 
-Correcting the DNS configuration allowed Windows 10 to join the domain successfully.
+Troubleshooting network connectivity helped me understand how small configuration mistakes can disrupt an entire lab environment.
 
-## 3. Centralized Security Monitoring Requires Multiple Components
+### 3. Centralized Security Monitoring
 
-Installing Splunk alone does not automatically provide visibility into Windows endpoints.
+Configuring Splunk Enterprise, Universal Forwarder, and Sysmon helped me understand the complete log collection process.
 
-Sysmon, Universal Forwarder, event inputs, receiving ports, and Splunk indexes must all work together to establish a complete monitoring pipeline.
+I learned that simply installing a SIEM is not enough. Proper inputs, receiving ports, indexes, service permissions, and event sources are necessary for collecting useful telemetry.
 
-## 4. Security Logs Must Be Interpreted Correctly
+### 4. Investigating Windows Authentication
 
-I learned that Windows authentication events have different meanings depending on their Event ID, source, logon type, and status codes.
+By generating controlled authentication activity, I learned how Windows records failed and successful logon attempts.
 
-A successful NTLM credential validation does not always mean an interactive desktop session was established.
+I practiced examining Event IDs 4624, 4625, and 4776 to investigate account activity and understand authentication results.
 
-Correlating multiple events is necessary to understand what happened.
+### 5. Learning Splunk Search Processing Language
 
-## 5. Troubleshooting Is an Important Cybersecurity Skill
+I gained practical experience using SPL operators such as:
 
-This project required troubleshooting Windows networking, Linux storage, Splunk field extraction, authentication auditing, and tool compatibility.
+- `search`
+- `table`
+- `stats`
+- `sort`
+- `where`
+- `eval`
+- `rex`
+- `streamstats`
 
-Working through these issues improved my ability to investigate problems systematically instead of relying on assumptions.
+These commands allowed me to filter, extract, organize, and investigate Windows security events.
 
-## Conclusion
+### 6. Understanding the MITRE ATT&CK Framework
 
-This Active Directory SOC HomeLab provided hands-on experience building a virtual enterprise environment and implementing security monitoring across multiple systems.
+Atomic Red Team helped me understand how individual adversary techniques are categorized in MITRE ATT&CK.
 
-By configuring Active Directory, Splunk Enterprise, Sysmon, and Splunk Universal Forwarder, I developed a better understanding of how security telemetry is generated, collected, and analyzed.
+By running selected techniques and reviewing the resulting events, I became more familiar with how simulated attacker behaviors can be investigated from a defensive perspective.
 
-Using NetExec and Atomic Red Team allowed me to simulate selected security-relevant activities and examine how those behaviors appeared in Windows logs and Splunk.
+### 7. Troubleshooting and Problem Solving
 
-The project strengthened my understanding of network administration, Windows authentication, log analysis, threat detection, and the investigative workflow followed by SOC analysts.
+One of the most valuable parts of the project was troubleshooting real configuration problems.
 
-It also established a reusable laboratory environment for future cybersecurity learning and detection-engineering exercises.
-
----
-
-# 19. Security Considerations
-
-This environment was intentionally created for cybersecurity education and testing.
-
-Several security practices are important when maintaining or reproducing the lab:
-
-1. Perform authentication testing only against systems and accounts you own or are explicitly authorized to assess.
-2. Use disposable test credentials and avoid reusing passwords from personal or production accounts.
-3. Keep Windows Firewall enabled and permit only necessary connections.
-4. Restrict access to Splunk Web and receiving ports.
-5. Take VMware snapshots before running tests that modify the operating system.
-6. Review Atomic Red Team cleanup procedures.
-7. Avoid disabling antivirus or EDR protection globally.
-8. Monitor Splunk storage utilization and configure appropriate data retention.
-9. Do not publish actual passwords, tokens, credentials, or security database files.
-10. Review screenshots for sensitive information before uploading them to GitHub.
-
-The project is intended to demonstrate controlled security testing and defensive monitoring, not unauthorized access or real-world exploitation.
+Issues involving VMware networking, Active Directory DNS, Linux storage, FreeRDP compatibility, and Splunk searches helped strengthen my ability to approach technical problems systematically.
 
 ---
 
-# 20. References
+# Conclusion
 
-The following resources were used for software downloads, technical configuration, and additional background learning.
+This project provided hands-on experience designing and implementing an Active Directory environment with centralized security monitoring.
+
+Using VMware Workstation Pro, I deployed Windows Server 2022, Windows 10, Ubuntu Server, and Kali Linux in a virtual network.
+
+I configured Active Directory Domain Services, created users and Organizational Units, joined Windows 10 to the domain, and established a centralized logging environment using Splunk Enterprise.
+
+By installing Sysmon and Splunk Universal Forwarder, I was able to collect detailed Windows endpoint and authentication events.
+
+I then performed controlled RDP authentication testing using NetExec and investigated the resulting activity in Splunk.
+
+Finally, I used Atomic Red Team to simulate selected MITRE ATT&CK techniques and analyze the endpoint telemetry generated by those tests.
+
+Overall, this project strengthened my knowledge of:
+
+- Windows Server administration
+- Active Directory management
+- VMware networking
+- Windows authentication
+- Splunk Enterprise
+- Sysmon monitoring
+- Security event analysis
+- Threat detection
+- MITRE ATT&CK
+- Purple-team testing
+- Troubleshooting and incident investigation
+
+The experience gave me a better understanding of how security professionals build monitoring environments, investigate suspicious activity, and use collected telemetry to support defensive security operations.
+
+The lab can also serve as a foundation for future SOC investigations, threat-hunting exercises, and detection engineering projects.
+
+---
+
+# References
 
 ### Microsoft
 
 - [Windows 10 Installation Media](https://www.microsoft.com/software-download/windows10)
-- [Windows Server 2022 Evaluation](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
-- [Active Directory Domain Services Documentation](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/)
-- [Sysmon — Microsoft Sysinternals](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon)
+- [Windows Server 2022](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2022)
+- [Active Directory Domain Services](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/)
+- [Sysmon Documentation](https://learn.microsoft.com/en-us/sysinternals/downloads/sysmon)
 - [Windows Security Auditing](https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/)
 
 ### VMware
 
-- [VMware Workstation Documentation](https://techdocs.broadcom.com/)
+- [VMware Documentation](https://techdocs.broadcom.com/)
 
 ### Ubuntu
 
@@ -2302,33 +2147,29 @@ The following resources were used for software downloads, technical configuratio
 - [Splunk Universal Forwarder](https://www.splunk.com/en_us/download/universal-forwarder.html)
 - [Splunk Search Reference](https://docs.splunk.com/Documentation/Splunk/latest/SearchReference/)
 
-### Security Testing and Monitoring
+### Security Testing
 
 - [Kali Linux](https://www.kali.org/)
 - [Olaf Hartong — Sysmon Modular](https://github.com/olafhartong/sysmon-modular)
 - [NetExec Documentation](https://www.netexec.wiki/)
 - [Atomic Red Team](https://github.com/redcanaryco/atomic-red-team)
 - [Invoke-AtomicRedTeam](https://github.com/redcanaryco/invoke-atomicredteam)
-- [MITRE ATT&CK Framework](https://attack.mitre.org/)
+- [MITRE ATT&CK](https://attack.mitre.org/)
 
 ---
 
-## Documentation and AI Transparency
+## AI Transparency
 
-**AI Transparency:** This GitHub README was organized and written with assistance from ChatGPT using my original project documentation and screenshots.
-
-The virtual machines, Active Directory configurations, Splunk environment, monitoring setup, and security testing described in this repository are based on the hands-on work performed during my lab.
-
-AI assistance was used to improve the organization, clarity, technical explanations, and readability of the documentation.
-
-The project is maintained as a personal cybersecurity learning and portfolio resource.
+> **AI-Assisted Documentation:** This README was organized and written with assistance from ChatGPT using my original project documentation, screenshots, and lab results. The configurations, testing, troubleshooting, and security investigations described in this repository are based on the hands-on activities performed during my Active Directory SOC HomeLab project. AI assistance was used to improve documentation structure, technical explanations, clarity, and readability.
 
 ---
 
-## Final Note
+## Security Disclaimer
 
-This project represents a practical learning environment focused on Windows administration, centralized security monitoring, endpoint telemetry, authentication analysis, and controlled purple-team testing.
+All security testing documented in this repository was performed against authorized virtual machines in an isolated HomeLab environment.
 
-The skills developed through this lab are relevant to Security Operations Center (SOC) Analyst, Cybersecurity Analyst, and other defensive security roles.
+The purpose of this project is educational, with an emphasis on Active Directory administration, defensive security monitoring, threat detection, and incident investigation.
 
-**All testing was performed within an authorized virtual HomeLab environment.**
+No production systems or unauthorized third-party assets were targeted.
+
+**This repository is intended as a personal cybersecurity learning and portfolio project.**
