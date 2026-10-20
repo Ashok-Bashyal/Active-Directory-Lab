@@ -2494,54 +2494,8 @@ This can help identify machines experiencing repeated authentication failures.
 
 ---
 
-## Detection 2 — NTLM Incorrect Password Attempts
 
-```spl id="sxs39z"
-index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
-| rex field=_raw "Logon Account:\s+(?<Account>\S+)"
-| rex field=_raw "Source Workstation:\s+(?<Workstation>[^\r\n]+)"
-| rex field=_raw "Error Code:\s+(?<AuthStatus>0x[0-9A-Fa-f]+)"
-| where lower(AuthStatus)="0xc000006a"
-| stats count as FailedAttempts by Account Workstation
-| sort -FailedAttempts
-```
-
-**Purpose:** Identifies accounts and workstations generating incorrect-password NTLM validation events.
-
-This can be useful when investigating password-guessing activity.
-
----
-
-## Detection 3 — Multiple Failures Followed by Success
-
-```spl id="a0u7is"
-index=endpoint host=ADDC01 source="WinEventLog:Security" EventCode=4776
-| rex field=_raw "Logon Account:\s+(?<Account>\S+)"
-| rex field=_raw "Source Workstation:\s+(?<Workstation>[^\r\n]+)"
-| rex field=_raw "Error Code:\s+(?<AuthStatus>0x[0-9A-Fa-f]+)"
-| eval Result=case(
-    lower(AuthStatus)="0xc000006a", "Failure",
-    lower(AuthStatus)="0x0", "Success"
-)
-| where isnotnull(Result) AND isnotnull(Account) AND isnotnull(Workstation)
-| sort 0 _time
-| streamstats time_window=10m count(eval(Result="Failure")) as FailedAttempts by Account Workstation
-| where Result="Success" AND FailedAttempts>=5
-| table _time host Account Workstation FailedAttempts Result
-| sort -_time
-```
-
-**Purpose:** Identifies successful NTLM credential validation after five or more incorrect-password attempts from the same account and workstation within ten minutes.
-
-### Why This Detection Is Important
-
-Repeated authentication failures followed by a successful credential validation can be consistent with password-guessing activity.
-
-However, analysts should correlate these events with other authentication logs and contextual information before determining whether an account was compromised.
-
----
-
-## Detection 4 — Sysmon Process Creation
+## Detection 2 — Sysmon Process Creation
 
 ```spl id="2tzxwq"
 index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
@@ -2557,7 +2511,7 @@ These events can provide details about executed programs and process activity.
 
 ---
 
-## Detection 5 — Sysmon Event Distribution
+## Detection 3 — Sysmon Event Distribution
 
 ```spl id="ux9u77"
 index=endpoint source="XmlWinEventLog:Microsoft-Windows-Sysmon/Operational"
@@ -2572,7 +2526,7 @@ This helps identify the types of endpoint telemetry being received.
 
 ---
 
-## Detection 6 — Windows Authentication Timeline
+## Detection 4 — Windows Authentication Timeline
 
 ```spl id="iyvr5j"
 index=endpoint source="WinEventLog:Security"
@@ -2587,7 +2541,7 @@ This can help correlate failed logons, successful logons, credential validation 
 
 ---
 
-## Detection 7 — Investigate a Specific Account
+## Detection 5 — Investigate a Specific Account
 
 ```spl id="vjxxuu"
 index=endpoint source="WinEventLog:Security" "tsmith"
@@ -2599,7 +2553,7 @@ index=endpoint source="WinEventLog:Security" "tsmith"
 
 ---
 
-## Detection 8 — Verify Endpoint Log Collection
+## Detection 6 — Verify Endpoint Log Collection
 
 ```spl id="xpxyks"
 index=endpoint
