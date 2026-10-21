@@ -2726,12 +2726,5 @@ It also provided a reusable HomeLab environment for future security monitoring, 
 
 ---
 
-<div align="center">
-
-### 🛡️ Active Directory HomeLab
-
-**Active Directory • Splunk Enterprise • Sysmon • Threat Detection • Purple Teaming**
-
-*All security testing was conducted within an authorized virtual HomeLab environment for educational purposes.*
 
 </div>
